@@ -34,7 +34,7 @@ Driver must support:
 └── smartrf_settings.h  # Header for SmartRF settings
 /Core/
 └── main.c              # Application entry point
-
+```
 
 ## Git Strategy
 - **Evan**: `feature/cc1201-driver`
