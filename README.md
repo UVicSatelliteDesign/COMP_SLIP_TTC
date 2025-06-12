@@ -35,6 +35,7 @@ Driver must support:
 /Core/
 └── main.c              # Application entry point
 ```
+---
 
 ## Git Strategy
 - **Evan**: `feature/cc1201-driver`
