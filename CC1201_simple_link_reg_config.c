@@ -53,6 +53,17 @@ static const registerSetting_t preferredSettings[]=
   {CC1201_XOSC1,             0x03},
 };
 
+/**
+ * @brief Sends a strobe command to the CC1201 radio.
+ * Strobe commands are used to control the state of the CC1201, such as changing power states (e.g., idle, RX, TX),
+ * calibrating the frequency synthesizer, or flushing FIFOs. A comprehensive list of strobe commands
+ * can be found in the CC1201 datasheet.
+ *
+ * @param strobe_command The specific strobe command byte to send.
+ * @param status_byte Pointer to a uint8_t where the status byte received from the CC1201 will be stored.
+ *                    Can be NULL if the status byte is not needed.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
 HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte)
 {
     HAL_StatusTypeDef status;
