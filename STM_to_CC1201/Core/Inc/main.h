@@ -65,7 +65,9 @@ void Error_Handler(void);
 #define JTCK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-
+#define CC1201_SPI_HANDLE hspi1
+#define CC1201_CS_PORT GPIOB
+#define CC1201_CS_PIN GPIO_PIN_6
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

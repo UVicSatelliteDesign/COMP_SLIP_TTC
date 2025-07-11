@@ -1,5 +1,6 @@
+#include "main.h" // Include main.h to access SPI handle and CS pin definitions
 
-static const registerSetting_t preferredSettings[]= 
+static const registerSetting_t preferredSettings[]=
 {
   {CC1201_IOCFG2,            0x06},
   {CC1201_SYNC3,             0x55},
@@ -51,3 +52,22 @@ static const registerSetting_t preferredSettings[]=
   {CC1201_XOSC5,             0x0E},
   {CC1201_XOSC1,             0x03},
 };
+
+HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte)
+{
+    HAL_StatusTypeDef status;
+    uint8_t rx_data;
+
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
+
+    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, HAL_MAX_DELAY); // Transmit strobe command and receive status
+
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
+
+    if (status == HAL_OK) {
+        if (status_byte != NULL) {
+            *status_byte = rx_data;
+        }
+    }
+    return status;
+}
