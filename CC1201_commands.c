@@ -93,6 +93,12 @@ HAL_StatusTypeDef CC1201_Nop(uint8_t *status_byte)
 /**
  * @brief Reads a single register from the CC1201 radio.
  *
+ * This function is used to read the current value of a CC1201 configuration or status register.
+ * For example, to read the `MARCSTATE` register, which indicates the current state of the radio
+ * (e.g., IDLE, RX, TX, FSTXON, CALIBRATE, SLEEP), you would pass its defined address.
+ * Note: The actual definition for `MARCSTATE` (e.g., `#define CC1201_MARCSTATE 0xXX`) should be
+ * provided in a separate header file that lists all CC1201 register addresses.
+ *
  * @param reg_addr The address of the register to read. The read bit (MSB) will be set internally.
  * @param read_data Pointer to a uint8_t where the read data will be stored.
  * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
