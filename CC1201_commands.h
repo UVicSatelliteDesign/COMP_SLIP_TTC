@@ -20,4 +20,10 @@ HAL_StatusTypeDef CC1201_FlushTxFifo(uint8_t *status_byte);
 HAL_StatusTypeDef CC1201_WorReset(uint8_t *status_byte);
 HAL_StatusTypeDef CC1201_Nop(uint8_t *status_byte);
 
+// Function prototype for reading a status register
+HAL_StatusTypeDef CC1201_ReadStatus(uint8_t reg_addr, uint8_t *read_data);
+
+// Function prototype for writing to a register
+HAL_StatusTypeDef CC1201_WriteRegister(uint8_t reg_addr, uint8_t write_data);
+
 #endif // CC1201_COMMANDS_H

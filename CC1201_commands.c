@@ -17,6 +17,9 @@
 #define CC1201_STROBE_WOR_RESET         0x3C
 #define CC1201_STROBE_NOP               0x3D
 
+// Read bit for register addresses
+#define CC1201_READ_BIT                 0x80
+
 HAL_StatusTypeDef CC1201_SoftReset(uint8_t *status_byte)
 {
     return CC1201_SendStrobe(CC1201_STROBE_SOFT_RESET, status_byte);
@@ -85,4 +88,59 @@ HAL_StatusTypeDef CC1201_WorReset(uint8_t *status_byte)
 HAL_StatusTypeDef CC1201_Nop(uint8_t *status_byte)
 {
     return CC1201_SendStrobe(CC1201_STROBE_NOP, status_byte);
+}
+
+/**
+ * @brief Reads a single register from the CC1201 radio.
+ *
+ * @param reg_addr The address of the register to read. The read bit (MSB) will be set internally.
+ * @param read_data Pointer to a uint8_t where the read data will be stored.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_ReadStatus(uint8_t reg_addr, uint8_t *read_data)
+{
+    HAL_StatusTypeDef status;
+    uint8_t tx_buffer[2];
+    uint8_t rx_buffer[2];
+
+    // Set the read bit (MSB) for the register address
+    tx_buffer[0] = reg_addr | CC1201_READ_BIT;
+    tx_buffer[1] = 0x00; // Dummy byte for reading data
+
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
+
+    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, tx_buffer, rx_buffer, 2, HAL_MAX_DELAY);
+
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
+
+    if (status == HAL_OK) {
+        if (read_data != NULL) {
+            *read_data = rx_buffer[1]; // The actual data is in the second byte received
+        }
+    }
+    return status;
+}
+
+/**
+ * @brief Writes a single byte to a register in the CC1201 radio.
+ *
+ * @param reg_addr The address of the register to write to.
+ * @param write_data The byte of data to write to the register.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_WriteRegister(uint8_t reg_addr, uint8_t write_data)
+{
+    HAL_StatusTypeDef status;
+    uint8_t tx_buffer[2];
+
+    tx_buffer[0] = reg_addr; // Register address
+    tx_buffer[1] = write_data; // Data to write
+
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
+
+    status = HAL_SPI_Transmit(&CC1201_SPI_HANDLE, tx_buffer, 2, HAL_MAX_DELAY);
+
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
+
+    return status;
 }
