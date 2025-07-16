@@ -1,4 +1,5 @@
-#include "main.h" // Include main.h to access SPI handle and CS pin definitions
+#include "main.h"
+#include "CC1201_reg.h" // Include main.h to access SPI handle and CS pin definitions
 
 static const registerSetting_t preferredSettings[]=
 {

@@ -26,4 +26,9 @@ HAL_StatusTypeDef CC1201_ReadStatus(uint8_t reg_addr, uint8_t *read_data);
 // Function prototype for writing to a register
 HAL_StatusTypeDef CC1201_WriteRegister(uint8_t reg_addr, uint8_t write_data);
 
+// Function prototypes for reading status and FIFO bytes
+HAL_StatusTypeDef CC1201_ReadMARCState(uint8_t *marc_state);
+HAL_StatusTypeDef CC1201_GetNumRXBytes(uint8_t *num_bytes);
+HAL_StatusTypeDef CC1201_GetNumTXBytes(uint8_t *num_bytes);
+
 #endif // CC1201_COMMANDS_H

@@ -1,5 +1,6 @@
 #include "CC1201_commands.h"
-#include "CC1201_simple_link_reg_config.h" // Assuming CC1201_SendStrobe is defined here
+#include "CC1201_simple_link_reg_config.h"
+#include "CC1201_reg.h" // Assuming CC1201_SendStrobe is defined here
 
 // Strobe command values for CC1201 (from datasheet)
 #define CC1201_STROBE_SOFT_RESET        0x30
@@ -149,4 +150,37 @@ HAL_StatusTypeDef CC1201_WriteRegister(uint8_t reg_addr, uint8_t write_data)
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
 
     return status;
+}
+
+/**
+ * @brief Reads the MARCSTATE register to get the current state of the radio.
+ *
+ * @param marc_state Pointer to a uint8_t where the MARCSTATE value will be stored.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_ReadMARCState(uint8_t *marc_state)
+{
+    return CC1201_ReadStatus(CC1201_MARCSTATE, marc_state);
+}
+
+/**
+ * @brief Gets the number of bytes currently in the RX FIFO.
+ *
+ * @param num_bytes Pointer to a uint8_t where the number of RX bytes will be stored.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_GetNumRXBytes(uint8_t *num_bytes)
+{
+    return CC1201_ReadStatus(CC1201_NUM_RXBYTES, num_bytes);
+}
+
+/**
+ * @brief Gets the number of bytes currently in the TX FIFO.
+ *
+ * @param num_bytes Pointer to a uint8_t where the number of TX bytes will be stored.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_GetNumTXBytes(uint8_t *num_bytes)
+{
+    return CC1201_ReadStatus(CC1201_NUM_TXBYTES, num_bytes);
 }
