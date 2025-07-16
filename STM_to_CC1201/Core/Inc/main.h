@@ -68,6 +68,9 @@ void Error_Handler(void);
 #define CC1201_SPI_HANDLE hspi1
 #define CC1201_CS_PORT GPIOB
 #define CC1201_CS_PIN GPIO_PIN_6
+#define CC1201_INT_PORT GPIOB
+#define CC1201_INT_PIN  GPIO_PIN_0
+#define CC1201_INT_EXTI_IRQn EXTI0_IRQn
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
