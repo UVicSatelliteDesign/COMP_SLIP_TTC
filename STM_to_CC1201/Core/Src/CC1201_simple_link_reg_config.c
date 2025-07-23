@@ -87,7 +87,23 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
     // Small delay to ensure CS is stable
     HAL_Delay(1);
 
-    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, HAL_MAX_DELAY); // Transmit strobe command and receive status
+    // Use shorter timeout to avoid infinite hang
+    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, 1000); // 1 second timeout
+    
+    printf("    [DEBUG] SPI transaction returned with status: %d\n\r", status);
+    
+    if (status != HAL_OK) {
+        printf("    [ERROR] SPI transaction failed! Status: %d\n\r", status);
+        if (status == HAL_TIMEOUT) {
+            printf("    [ERROR] SPI TIMEOUT occurred!\n\r");
+        }
+        if (status == HAL_ERROR) {
+            printf("    [ERROR] SPI ERROR occurred!\n\r");
+        }
+        if (status == HAL_BUSY) {
+            printf("    [ERROR] SPI BUSY occurred!\n\r");
+        }
+    }
 
     printf("    [DEBUG] SPI transaction complete, pulling CS high...\n\r");
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high

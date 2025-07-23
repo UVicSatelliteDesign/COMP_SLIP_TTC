@@ -47,7 +47,6 @@ COM_InitTypeDef BspCOMInit;
 __IO uint32_t BspButtonState = BUTTON_RELEASED;
 
 SPI_HandleTypeDef hspi2;
-SPI_HandleTypeDef hspi4;
 
 /* USER CODE BEGIN PV */
 
@@ -57,7 +56,6 @@ SPI_HandleTypeDef hspi4;
 void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_SPI4_Init(void);
 static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -593,27 +591,49 @@ void run_comprehensive_cc1201_test(void) {
 void test_GPIO_pins(void) {
     printf("=== GPIO Pin Test ===\n\r");
     
-    // Test CS pin
-    printf("CS Pin (PE4): ");
+    // Test CS pin more thoroughly
+    printf("CS Pin (PE4) Detailed Test:\n\r");
     GPIO_PinState cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
-    printf("%s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    printf("  Initial state: %s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
     
-    // Toggle CS pin to test control
-    printf("Toggling CS pin...\n\r");
-    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET);
-    HAL_Delay(100);
-    cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
-    printf("CS Pin after LOW: %s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    // Force CS LOW and check multiple times
+    printf("  Forcing CS LOW...\n\r");
+    for (int i = 0; i < 5; i++) {
+        HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET);
+        HAL_Delay(10);
+        cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
+        printf("    Attempt %d: %s\n\r", i+1, cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    }
     
-    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
-    HAL_Delay(100);
-    cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
-    printf("CS Pin after HIGH: %s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    // Force CS HIGH and check multiple times
+    printf("  Forcing CS HIGH...\n\r");
+    for (int i = 0; i < 5; i++) {
+        HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
+        HAL_Delay(10);
+        cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
+        printf("    Attempt %d: %s\n\r", i+1, cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    }
     
     // Test INT pin
     printf("INT Pin (PD4): ");
     GPIO_PinState int_state = HAL_GPIO_ReadPin(CC1201_INT_PORT, CC1201_INT_PIN);
     printf("%s\n\r", int_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    
+    // Check SPI state
+    printf("SPI2 State: ");
+    if (CC1201_SPI_HANDLE.State == HAL_SPI_STATE_READY) {
+        printf("READY\n\r");
+    } else if (CC1201_SPI_HANDLE.State == HAL_SPI_STATE_BUSY) {
+        printf("BUSY\n\r");
+    } else if (CC1201_SPI_HANDLE.State == HAL_SPI_STATE_BUSY_TX) {
+        printf("BUSY_TX\n\r");
+    } else if (CC1201_SPI_HANDLE.State == HAL_SPI_STATE_BUSY_RX) {
+        printf("BUSY_RX\n\r");
+    } else if (CC1201_SPI_HANDLE.State == HAL_SPI_STATE_BUSY_TX_RX) {
+        printf("BUSY_TX_RX\n\r");
+    } else {
+        printf("ERROR/RESET (%d)\n\r", CC1201_SPI_HANDLE.State);
+    }
     
     printf("===================\n\r");
 }
@@ -807,7 +827,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_SPI4_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   
@@ -1039,54 +1058,6 @@ static void MX_SPI2_Init(void)
 }
 
 /**
-  * @brief SPI4 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI4_Init(void)
-{
-
-  /* USER CODE BEGIN SPI4_Init 0 */
-
-  /* USER CODE END SPI4_Init 0 */
-
-  /* USER CODE BEGIN SPI4_Init 1 */
-
-  /* USER CODE END SPI4_Init 1 */
-  /* SPI4 parameter configuration*/
-  hspi4.Instance = SPI4;
-  hspi4.Init.Mode = SPI_MODE_MASTER;
-  hspi4.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi4.Init.DataSize = SPI_DATASIZE_4BIT;
-  hspi4.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi4.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi4.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi4.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi4.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi4.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi4.Init.CRCPolynomial = 0x0;
-  hspi4.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
-  hspi4.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-  hspi4.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
-  hspi4.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-  hspi4.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-  hspi4.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-  hspi4.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
-  hspi4.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
-  hspi4.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
-  hspi4.Init.IOSwap = SPI_IO_SWAP_DISABLE;
-  if (HAL_SPI_Init(&hspi4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI4_Init 2 */
-
-  /* USER CODE END SPI4_Init 2 */
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -1104,6 +1075,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PE4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PD4 */
   GPIO_InitStruct.Pin = GPIO_PIN_4;
