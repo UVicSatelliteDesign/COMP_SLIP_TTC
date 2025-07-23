@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (12.3.rel1)
+# Toolchain: GNU Tools for STM32 (13.3.rel1)
 ################################################################################
 
 -include ../makefile.init
@@ -61,8 +61,8 @@ all: main-build
 main-build: STM_to_CC1201.elf secondary-outputs
 
 # Tool invocations
-STM_to_CC1201.elf STM_to_CC1201.map: $(OBJS) $(USER_OBJS) C:\Users\ckwes\OneDrive\UVic\Satelite\ Club\COMP_SLIP_TTC\STM_to_CC1201\STM32H743ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "STM_to_CC1201.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\ckwes\OneDrive\UVic\Satelite Club\COMP_SLIP_TTC\STM_to_CC1201\STM32H743ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM_to_CC1201.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+STM_to_CC1201.elf STM_to_CC1201.map: $(OBJS) $(USER_OBJS) C:\dev\COMP_SLIP_TTC\STM_to_CC1201\STM32H743ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM_to_CC1201.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\dev\COMP_SLIP_TTC\STM_to_CC1201\STM32H743ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM_to_CC1201.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -36,12 +36,6 @@ extern "C" {
 #include "CC1201_commands.h"
 #include "CC1201_simple_link_reg_config.h"
 
-// Structure for register settings
-typedef struct {
-    uint16_t addr;
-    uint8_t data;
-} registerSetting_t;
-
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -63,7 +57,8 @@ typedef struct {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+// External variable declarations
+extern SPI_HandleTypeDef hspi4;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

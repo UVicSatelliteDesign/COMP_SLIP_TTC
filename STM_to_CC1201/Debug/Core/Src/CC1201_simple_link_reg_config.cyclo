@@ -1,0 +1,4 @@
+../Core/Src/CC1201_simple_link_reg_config.c:68:19:CC1201_SendStrobe	3
+../Core/Src/CC1201_simple_link_reg_config.c:94:19:CC1201_WriteRegisterConfig	4
+../Core/Src/CC1201_simple_link_reg_config.c:121:10:CC1201_GetNumPreferredSettings	1
+../Core/Src/CC1201_simple_link_reg_config.c:131:26:CC1201_GetPreferredSettings	1
