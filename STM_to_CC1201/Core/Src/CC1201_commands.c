@@ -209,3 +209,114 @@ HAL_StatusTypeDef CC1201_GetNumTXBytes(uint8_t *num_bytes)
 {
     return CC1201_ReadStatus(CC1201_NUM_TXBYTES, num_bytes);
 }
+
+/**
+ * @brief Writes multiple bytes to the TX FIFO.
+ *
+ * @param data Pointer to the data array to be written to TX FIFO.
+ * @param length Number of bytes to write.
+ * @param status_byte Pointer to store the status byte returned.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_WriteTxFifo(uint8_t *data, uint8_t length, uint8_t *status_byte)
+{
+    if (data == NULL || status_byte == NULL || length == 0) {
+        return HAL_ERROR;
+    }
+    
+    HAL_StatusTypeDef status;
+    uint8_t tx_buffer[2 + length]; // Command + address + data
+    uint8_t rx_buffer[2 + length];
+    
+    // Build command: burst write to TX FIFO (0x3F | 0x40)
+    tx_buffer[0] = 0x7F; // TX FIFO burst write
+    
+    // Copy data to transmit buffer
+    for (uint8_t i = 0; i < length; i++) {
+        tx_buffer[1 + i] = data[i];
+    }
+    
+    // Pull CS low to start SPI transaction
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET);
+    
+    // Perform SPI transaction
+    status = HAL_SPI_TransmitReceive(&hspi2, tx_buffer, rx_buffer, length + 1, HAL_MAX_DELAY);
+    
+    // Pull CS high to end SPI transaction
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
+    
+    // Store status byte (first received byte)
+    *status_byte = rx_buffer[0];
+    
+    return status;
+}
+
+/**
+ * @brief Reads multiple bytes from the RX FIFO.
+ *
+ * @param data Pointer to the buffer where read data will be stored.
+ * @param length Number of bytes to read.
+ * @param status_byte Pointer to store the status byte returned.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_ReadRxFifo(uint8_t *data, uint8_t length, uint8_t *status_byte)
+{
+    if (data == NULL || status_byte == NULL || length == 0) {
+        return HAL_ERROR;
+    }
+    
+    HAL_StatusTypeDef status;
+    uint8_t tx_buffer[1 + length]; // Command + dummy bytes
+    uint8_t rx_buffer[1 + length];
+    
+    // Build command: burst read from RX FIFO (0x3F | 0x80 | 0x40)
+    tx_buffer[0] = 0xFF; // RX FIFO burst read
+    
+    // Fill with dummy bytes for reading
+    for (uint8_t i = 1; i <= length; i++) {
+        tx_buffer[i] = 0x00;
+    }
+    
+    // Pull CS low to start SPI transaction
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET);
+    
+    // Perform SPI transaction
+    status = HAL_SPI_TransmitReceive(&hspi2, tx_buffer, rx_buffer, length + 1, HAL_MAX_DELAY);
+    
+    // Pull CS high to end SPI transaction
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
+    
+    // Store status byte (first received byte)
+    *status_byte = rx_buffer[0];
+    
+    // Copy received data
+    for (uint8_t i = 0; i < length; i++) {
+        data[i] = rx_buffer[1 + i];
+    }
+    
+    return status;
+}
+
+/**
+ * @brief Reads a single byte from the RX FIFO.
+ *
+ * @param data Pointer to store the single byte read from RX FIFO.
+ * @param status_byte Pointer to store the status byte returned.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_ReadSingleRxFifo(uint8_t *data, uint8_t *status_byte)
+{
+    return CC1201_ReadRxFifo(data, 1, status_byte);
+}
+
+/**
+ * @brief Writes a single byte to the TX FIFO.
+ *
+ * @param data Single byte to write to TX FIFO.
+ * @param status_byte Pointer to store the status byte returned.
+ * @return HAL_StatusTypeDef Status of the SPI transmission (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_WriteSingleTxFifo(uint8_t data, uint8_t *status_byte)
+{
+    return CC1201_WriteTxFifo(&data, 1, status_byte);
+}

@@ -31,4 +31,10 @@ HAL_StatusTypeDef CC1201_ReadMARCState(uint8_t *marc_state);
 HAL_StatusTypeDef CC1201_GetNumRXBytes(uint8_t *num_bytes);
 HAL_StatusTypeDef CC1201_GetNumTXBytes(uint8_t *num_bytes);
 
+// Function prototypes for FIFO operations
+HAL_StatusTypeDef CC1201_WriteTxFifo(uint8_t *data, uint8_t length, uint8_t *status_byte);
+HAL_StatusTypeDef CC1201_ReadRxFifo(uint8_t *data, uint8_t length, uint8_t *status_byte);
+HAL_StatusTypeDef CC1201_ReadSingleRxFifo(uint8_t *data, uint8_t *status_byte);
+HAL_StatusTypeDef CC1201_WriteSingleTxFifo(uint8_t data, uint8_t *status_byte);
+
 #endif // CC1201_COMMANDS_H

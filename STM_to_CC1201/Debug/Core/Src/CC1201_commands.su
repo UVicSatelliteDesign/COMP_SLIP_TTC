@@ -17,3 +17,7 @@
 ../Core/Src/CC1201_commands.c:186:19:CC1201_ReadMARCState	16	static
 ../Core/Src/CC1201_commands.c:197:19:CC1201_GetNumRXBytes	16	static
 ../Core/Src/CC1201_commands.c:208:19:CC1201_GetNumTXBytes	16	static
+../Core/Src/CC1201_commands.c:221:19:CC1201_WriteTxFifo	96	dynamic
+../Core/Src/CC1201_commands.c:262:19:CC1201_ReadRxFifo	96	dynamic
+../Core/Src/CC1201_commands.c:307:19:CC1201_ReadSingleRxFifo	16	static
+../Core/Src/CC1201_commands.c:319:19:CC1201_WriteSingleTxFifo	16	static
