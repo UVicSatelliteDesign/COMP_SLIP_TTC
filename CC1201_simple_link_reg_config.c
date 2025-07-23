@@ -83,3 +83,52 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
     }
     return status;
 }
+
+/**
+ * @brief Writes configuration settings to CC1201 registers.
+ *
+ * @param settings Array of register settings to write.
+ * @param num_settings Number of settings in the array.
+ * @return HAL_StatusTypeDef Status of the configuration (HAL_OK on success).
+ */
+HAL_StatusTypeDef CC1201_WriteRegisterConfig(const registerSetting_t *settings, uint16_t num_settings)
+{
+    HAL_StatusTypeDef status = HAL_OK;
+    
+    for (uint16_t i = 0; i < num_settings; i++) {
+        if (settings[i].addr > 0xFF) {
+            // Extended register (requires burst access)
+            // For now, skip extended registers in this simple implementation
+            continue;
+        }
+        
+        status = CC1201_WriteRegister((uint8_t)settings[i].addr, settings[i].data);
+        if (status != HAL_OK) {
+            return status;
+        }
+        
+        HAL_Delay(1); // Small delay between register writes
+    }
+    
+    return status;
+}
+
+/**
+ * @brief Gets the number of preferred settings.
+ *
+ * @return uint16_t Number of settings in the preferred settings array.
+ */
+uint16_t CC1201_GetNumPreferredSettings(void)
+{
+    return sizeof(preferredSettings) / sizeof(registerSetting_t);
+}
+
+/**
+ * @brief Gets a pointer to the preferred settings array.
+ *
+ * @return const registerSetting_t* Pointer to the preferred settings array.
+ */
+const registerSetting_t* CC1201_GetPreferredSettings(void)
+{
+    return preferredSettings;
+}

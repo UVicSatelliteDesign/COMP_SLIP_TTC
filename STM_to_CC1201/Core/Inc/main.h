@@ -34,6 +34,14 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "CC1201_commands.h"
+#include "CC1201_simple_link_reg_config.h"
+
+// Structure for register settings
+typedef struct {
+    uint16_t addr;
+    uint8_t data;
+} registerSetting_t;
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -65,12 +73,13 @@ void Error_Handler(void);
 #define JTCK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-#define CC1201_SPI_HANDLE hspi1
-#define CC1201_CS_PORT GPIOB
-#define CC1201_CS_PIN GPIO_PIN_6
-#define CC1201_INT_PORT GPIOB
-#define CC1201_INT_PIN  GPIO_PIN_0
-#define CC1201_INT_EXTI_IRQn EXTI0_IRQn
+// CC1201 SPI and GPIO pin definitions
+#define CC1201_SPI_HANDLE hspi4
+#define CC1201_CS_PORT GPIOE
+#define CC1201_CS_PIN GPIO_PIN_4
+#define CC1201_INT_PORT GPIOD
+#define CC1201_INT_PIN  GPIO_PIN_4
+#define CC1201_INT_EXTI_IRQn EXTI4_IRQn
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

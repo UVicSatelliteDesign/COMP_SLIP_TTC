@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "CC1201_commands.h"
+#include "CC1201_simple_link_reg_config.h"
+#include "CC1201_reg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +64,144 @@ static void MX_SPI4_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// Function to initialize CC1201 with preferred settings
+HAL_StatusTypeDef initialize_CC1201(void) {
+    uint8_t status_byte = 0;
+    HAL_StatusTypeDef hal_status;
+    
+    printf("Initializing CC1201...\n\r");
+    
+    // Step 1: Soft reset
+    hal_status = CC1201_SoftReset(&status_byte);
+    if (hal_status != HAL_OK) {
+        printf("CC1201 Reset Failed!\n\r");
+        return hal_status;
+    }
+    printf("CC1201 Reset OK - Status: 0x%02X\n\r", status_byte);
+    
+    HAL_Delay(100); // Wait for reset to complete
+    
+    // Step 2: Write preferred settings (basic registers only)
+    const registerSetting_t* settings = CC1201_GetPreferredSettings();
+    uint16_t num_settings = CC1201_GetNumPreferredSettings();
+    
+    printf("Writing %d configuration registers...\n\r", num_settings);
+    hal_status = CC1201_WriteRegisterConfig(settings, num_settings);
+    if (hal_status != HAL_OK) {
+        printf("Configuration write failed!\n\r");
+        return hal_status;
+    }
+    printf("Configuration complete!\n\r");
+    
+    // Step 3: Enter idle mode
+    hal_status = CC1201_EnterIdleMode(&status_byte);
+    if (hal_status != HAL_OK) {
+        printf("Enter Idle Failed!\n\r");
+        return hal_status;
+    }
+    printf("Enter Idle OK - Status: 0x%02X\n\r", status_byte);
+    
+    return HAL_OK;
+}
+
+// Function to test CC1201 strobe commands
+void test_CC1201_strobe_commands(void) {
+    uint8_t status_byte = 0;
+    HAL_StatusTypeDef hal_status;
+    
+    printf("Starting CC1201 Strobe Command Tests...\n\r");
+    
+    // Test 1: NOP command (should always work)
+    printf("Test 1: NOP Command\n\r");
+    hal_status = CC1201_Nop(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  NOP Success - Status: 0x%02X\n\r", status_byte);
+    } else {
+        printf("  NOP Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    // Test 2: Soft Reset
+    printf("Test 2: Soft Reset\n\r");
+    hal_status = CC1201_SoftReset(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Soft Reset Success - Status: 0x%02X\n\r", status_byte);
+    } else {
+        printf("  Soft Reset Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    HAL_Delay(100); // Wait after reset
+    
+    // Test 3: Enter Idle Mode
+    printf("Test 3: Enter Idle Mode\n\r");
+    hal_status = CC1201_EnterIdleMode(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Enter Idle Success - Status: 0x%02X\n\r", status_byte);
+    } else {
+        printf("  Enter Idle Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    // Test 4: Read MARC State
+    printf("Test 4: Read MARC State\n\r");
+    uint8_t marc_state = 0;
+    hal_status = CC1201_ReadMARCState(&marc_state);
+    if (hal_status == HAL_OK) {
+        printf("  MARC State: 0x%02X\n\r", marc_state);
+    } else {
+        printf("  Read MARC State Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    // Test 5: Calibrate Frequency Synthesizer
+    printf("Test 5: Calibrate Frequency Synthesizer\n\r");
+    hal_status = CC1201_CalFreqSynth(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Cal Freq Synth Success - Status: 0x%02X\n\r", status_byte);
+    } else {
+        printf("  Cal Freq Synth Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    // Test 6: Enter RX Mode
+    printf("Test 6: Enter RX Mode\n\r");
+    hal_status = CC1201_EnterRxMode(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Enter RX Success - Status: 0x%02X\n\r", status_byte);
+    } else {
+        printf("  Enter RX Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    HAL_Delay(10);
+    
+    // Test 7: Read MARC State again
+    printf("Test 7: Read MARC State (after RX)\n\r");
+    hal_status = CC1201_ReadMARCState(&marc_state);
+    if (hal_status == HAL_OK) {
+        printf("  MARC State: 0x%02X\n\r", marc_state);
+    } else {
+        printf("  Read MARC State Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    // Test 8: Flush RX FIFO
+    printf("Test 8: Flush RX FIFO\n\r");
+    hal_status = CC1201_FlushRxFifo(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Flush RX FIFO Success - Status: 0x%02X\n\r", status_byte);
+    } else {
+        printf("  Flush RX FIFO Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    // Test 9: Check RX bytes
+    printf("Test 9: Check RX Bytes\n\r");
+    uint8_t rx_bytes = 0;
+    hal_status = CC1201_GetNumRXBytes(&rx_bytes);
+    if (hal_status == HAL_OK) {
+        printf("  RX Bytes: %d\n\r", rx_bytes);
+    } else {
+        printf("  Get RX Bytes Failed - HAL Status: %d\n\r", hal_status);
+    }
+    
+    printf("CC1201 Strobe Command Tests Complete!\n\r");
+    printf("========================================\n\r");
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -98,6 +238,21 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI4_Init();
   /* USER CODE BEGIN 2 */
+  
+  // Initialize and test CC1201 communication
+  printf("Starting CC1201 initialization...\n\r");
+  HAL_Delay(100); // Give CC1201 time to power up
+  
+  if (initialize_CC1201() == HAL_OK) {
+      printf("CC1201 initialization successful!\n\r");
+      BSP_LED_On(LED_GREEN);
+  } else {
+      printf("CC1201 initialization failed!\n\r");
+      BSP_LED_On(LED_RED);
+  }
+  
+  // Run initial strobe command tests
+  test_CC1201_strobe_commands();
 
   /* USER CODE END 2 */
 
@@ -134,6 +289,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t last_test_time = 0;
+  const uint32_t test_interval = 5000; // Test every 5 seconds
+  
   while (1)
   {
 
@@ -148,7 +306,29 @@ int main(void)
       BSP_LED_Toggle(LED_RED);
 
       /* ..... Perform your action ..... */
+      printf("Button pressed - Running CC1201 test...\n\r");
+      test_CC1201_strobe_commands();
     }
+    
+    // Periodic CC1201 communication test
+    if (HAL_GetTick() - last_test_time > test_interval) {
+        last_test_time = HAL_GetTick();
+        
+        // Simple NOP test to verify communication
+        uint8_t status_byte = 0;
+        HAL_StatusTypeDef hal_status = CC1201_Nop(&status_byte);
+        
+        if (hal_status == HAL_OK) {
+            printf("Periodic test - CC1201 Status: 0x%02X\n\r", status_byte);
+            BSP_LED_On(LED_GREEN);  // Communication OK
+            BSP_LED_Off(LED_RED);
+        } else {
+            printf("Periodic test - CC1201 Communication Failed\n\r");
+            BSP_LED_Off(LED_GREEN);
+            BSP_LED_On(LED_RED);   // Communication error
+        }
+    }
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -225,16 +405,16 @@ static void MX_SPI4_Init(void)
   hspi4.Instance = SPI4;
   hspi4.Init.Mode = SPI_MODE_MASTER;
   hspi4.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi4.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi4.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi4.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi4.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi4.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi4.Init.NSS = SPI_NSS_SOFT;
+  hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi4.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi4.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi4.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi4.Init.CRCPolynomial = 0x0;
-  hspi4.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi4.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   hspi4.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
   hspi4.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
   hspi4.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
@@ -269,14 +449,28 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
-  /*Configure GPIO pin : PB0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  /*Configure GPIO pin Output Level for CC1201 CS */
+  HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
+
+  /*Configure GPIO pin : CC1201 CS Pin */
+  GPIO_InitStruct.Pin = CC1201_CS_PIN;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(CC1201_CS_PORT, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : CC1201 INT Pin (PD4) */
+  GPIO_InitStruct.Pin = CC1201_INT_PIN;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(CC1201_INT_PORT, &GPIO_InitStruct);
+
+  /* EXTI interrupt init */
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -288,7 +482,26 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if (GPIO_Pin == CC1201_INT_PIN)
     {
         // Handle CC1201 interrupt
-        // For example, read the received packet
+        printf("CC1201 Interrupt Triggered!\n\r");
+        
+        // Read MARC state to see what caused the interrupt
+        uint8_t marc_state = 0;
+        if (CC1201_ReadMARCState(&marc_state) == HAL_OK) {
+            printf("MARC State during interrupt: 0x%02X\n\r", marc_state);
+        }
+        
+        // Check if there are bytes in RX FIFO
+        uint8_t rx_bytes = 0;
+        if (CC1201_GetNumRXBytes(&rx_bytes) == HAL_OK) {
+            printf("RX Bytes available: %d\n\r", rx_bytes);
+            if (rx_bytes > 0) {
+                // Could read FIFO data here if needed
+                printf("Data received in RX FIFO!\n\r");
+            }
+        }
+        
+        // Toggle LED to indicate interrupt
+        BSP_LED_Toggle(LED_GREEN);
     }
 }
 /* USER CODE END 4 */
