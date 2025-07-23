@@ -620,14 +620,20 @@ void test_GPIO_pins(void) {
 
 // Function to initialize CC1201 with preferred settings
 HAL_StatusTypeDef initialize_CC1201(void) {
+    printf("[DEBUG] Entered initialize_CC1201() function\n\r");
+    
     uint8_t status_byte = 0;
     HAL_StatusTypeDef hal_status;
     
+    printf("[DEBUG] Variables initialized\n\r");
     printf("Initializing CC1201...\n\r");
+    printf("[DEBUG] After first printf in initialize_CC1201\n\r");
     printf("  Step 1: About to call SoftReset...\n\r");
+    printf("[DEBUG] About to call CC1201_SoftReset\n\r");
     
     // Step 1: Soft reset
     hal_status = CC1201_SoftReset(&status_byte);
+    printf("[DEBUG] CC1201_SoftReset returned\n\r");
     printf("  Step 1: SoftReset returned - HAL Status: %d, Status Byte: 0x%02X\n\r", hal_status, status_byte);
     
     if (hal_status != HAL_OK) {
@@ -845,16 +851,24 @@ int main(void)
   // Test GPIO pins first
   test_GPIO_pins();
   
-  // Initialize and test CC1201 communication
-  printf("Starting CC1201 initialization...\n\r");
-  HAL_Delay(100); // Give CC1201 time to power up
+  // Simple test instead of full initialization
+  printf("Starting simple CC1201 test...\n\r");
+  HAL_Delay(100);
   
-  if (initialize_CC1201() == HAL_OK) {
-      printf("CC1201 initialization successful!\n\r");
+  printf("Test 1: Creating status byte variable...\n\r");
+  uint8_t test_status = 0;
+  
+  printf("Test 2: About to call CC1201_Nop...\n\r");
+  HAL_StatusTypeDef nop_result = CC1201_Nop(&test_status);
+  
+  printf("Test 3: NOP returned - HAL: %d, Status: 0x%02X\n\r", nop_result, test_status);
+  
+  if (nop_result == HAL_OK) {
+      printf("Basic CC1201 communication working!\n\r");
       BSP_LED_Off(LED_RED);
       BSP_LED_On(LED_GREEN);
   } else {
-      printf("CC1201 initialization failed!\n\r");
+      printf("CC1201 communication failed!\n\r");
       BSP_LED_Off(LED_GREEN);
       BSP_LED_On(LED_RED);
   }
@@ -863,11 +877,10 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t last_comprehensive_test = 0;
-  uint32_t last_quick_test = 0;
+  uint32_t last_test = 0;
   uint32_t test_counter = 0;
   
-  printf("\n🚀 STARTING COMPREHENSIVE CC1201 TEST MODE 🚀\n\r");
+  printf("\n🚀 STARTING SIMPLE CC1201 TEST MODE 🚀\n\r");
   
   while (1)
   {
@@ -883,45 +896,33 @@ int main(void)
       BSP_LED_Toggle(LED_RED);
 
       /* ..... Perform your action ..... */
-      printf("\n[BUTTON] Manual comprehensive test triggered...\n\r");
-      run_comprehensive_cc1201_test();
+      printf("\n[BUTTON] Manual test triggered...\n\r");
+      uint8_t button_status = 0;
+      HAL_StatusTypeDef button_result = CC1201_Nop(&button_status);
+      printf("Button test - HAL: %d, Status: 0x%02X\n\r", button_result, button_status);
     }
     
-    // Run comprehensive test every 30 seconds
-    if (HAL_GetTick() - last_comprehensive_test > 30000) {
-      printf("\n[%lu] 🔄 Running Comprehensive Test Cycle %lu\n\r", HAL_GetTick(), ++test_counter);
-      run_comprehensive_cc1201_test();
-      last_comprehensive_test = HAL_GetTick();
-    }
-    
-    // Quick status check every 3 seconds
-    if (HAL_GetTick() - last_quick_test > 3000) {
+    // Simple periodic test every 5 seconds
+    if (HAL_GetTick() - last_test > 5000) {
+      printf("[%lu] Test %lu: ", HAL_GetTick(), ++test_counter);
+      
       uint8_t status_byte = 0;
       HAL_StatusTypeDef hal_status = CC1201_Nop(&status_byte);
       
-      printf("[%lu] Quick Status: ", HAL_GetTick());
       if (hal_status == HAL_OK) {
-        print_cc1201_status(status_byte, "NOP");
-        
-        // Update LEDs based on status
-        uint8_t radio_state = (status_byte >> 4) & 0x0F;
-        if (radio_state == 0x0) {  // IDLE state expected
-          BSP_LED_On(LED_GREEN);
-          BSP_LED_Off(LED_RED);
-        } else {
-          BSP_LED_Off(LED_GREEN);
-          BSP_LED_On(LED_YELLOW);  // Unexpected state
-        }
+        printf("OK - Status: 0x%02X\n\r", status_byte);
+        BSP_LED_On(LED_GREEN);
+        BSP_LED_Off(LED_RED);
       } else {
-        printf("COMMUNICATION ERROR - HAL: %d\n\r", hal_status);
+        printf("FAILED - HAL: %d\n\r", hal_status);
         BSP_LED_Off(LED_GREEN);
         BSP_LED_On(LED_RED);
       }
       
-      last_quick_test = HAL_GetTick();
+      last_test = HAL_GetTick();
     }
     
-    HAL_Delay(100); // Small delay to prevent overwhelming output
+    HAL_Delay(100);
     
     /* USER CODE END WHILE */
 

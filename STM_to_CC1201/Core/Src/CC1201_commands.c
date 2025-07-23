@@ -23,7 +23,10 @@
 
 HAL_StatusTypeDef CC1201_SoftReset(uint8_t *status_byte)
 {
-    return CC1201_SendStrobe(CC1201_STROBE_SOFT_RESET, status_byte);
+    printf("[DEBUG] Entered CC1201_SoftReset function\n\r");
+    HAL_StatusTypeDef result = CC1201_SendStrobe(CC1201_STROBE_SOFT_RESET, status_byte);
+    printf("[DEBUG] CC1201_SoftReset about to return: %d\n\r", result);
+    return result;
 }
 
 HAL_StatusTypeDef CC1201_FastTxOn(uint8_t *status_byte)
@@ -88,7 +91,10 @@ HAL_StatusTypeDef CC1201_WorReset(uint8_t *status_byte)
 
 HAL_StatusTypeDef CC1201_Nop(uint8_t *status_byte)
 {
-    return CC1201_SendStrobe(CC1201_STROBE_NOP, status_byte);
+    printf("[DEBUG] Entered CC1201_Nop function\n\r");
+    HAL_StatusTypeDef result = CC1201_SendStrobe(CC1201_STROBE_NOP, status_byte);
+    printf("[DEBUG] CC1201_Nop about to return: %d\n\r", result);
+    return result;
 }
 
 /**
