@@ -64,6 +64,35 @@ static void MX_SPI4_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// Function to test GPIO pin states
+void test_GPIO_pins(void) {
+    printf("=== GPIO Pin Test ===\n\r");
+    
+    // Test CS pin
+    printf("CS Pin (PE4): ");
+    GPIO_PinState cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
+    printf("%s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    
+    // Toggle CS pin to test control
+    printf("Toggling CS pin...\n\r");
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET);
+    HAL_Delay(100);
+    cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
+    printf("CS Pin after LOW: %s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
+    HAL_Delay(100);
+    cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
+    printf("CS Pin after HIGH: %s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    
+    // Test INT pin
+    printf("INT Pin (PD4): ");
+    GPIO_PinState int_state = HAL_GPIO_ReadPin(CC1201_INT_PORT, CC1201_INT_PIN);
+    printf("%s\n\r", int_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+    
+    printf("===================\n\r");
+}
+
 // Function to initialize CC1201 with preferred settings
 HAL_StatusTypeDef initialize_CC1201(void) {
     uint8_t status_byte = 0;
@@ -239,6 +268,9 @@ int main(void)
   MX_SPI4_Init();
   /* USER CODE BEGIN 2 */
   
+  // Test GPIO pins first
+  test_GPIO_pins();
+  
   // Initialize and test CC1201 communication
   printf("Starting CC1201 initialization...\n\r");
   HAL_Delay(100); // Give CC1201 time to power up
@@ -316,16 +348,33 @@ int main(void)
         
         // Simple NOP test to verify communication
         uint8_t status_byte = 0;
+        
+        // First check CS pin state
+        GPIO_PinState cs_state = HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN);
+        printf("CS Pin State: %s\n\r", cs_state == GPIO_PIN_SET ? "HIGH" : "LOW");
+        
+        // Try the NOP command
         HAL_StatusTypeDef hal_status = CC1201_Nop(&status_byte);
         
-        if (hal_status == HAL_OK) {
-            printf("Periodic test - CC1201 Status: 0x%02X\n\r", status_byte);
+        printf("Periodic test - HAL Status: %d, CC1201 Status: 0x%02X\n\r", hal_status, status_byte);
+        
+        if (hal_status == HAL_OK && status_byte != 0xFF && status_byte != 0x00) {
             BSP_LED_On(LED_GREEN);  // Communication OK
             BSP_LED_Off(LED_RED);
         } else {
-            printf("Periodic test - CC1201 Communication Failed\n\r");
             BSP_LED_Off(LED_GREEN);
             BSP_LED_On(LED_RED);   // Communication error
+            
+            // Additional diagnostics
+            if (hal_status != HAL_OK) {
+                printf("  HAL SPI Error - Check SPI configuration\n\r");
+            }
+            if (status_byte == 0xFF) {
+                printf("  Status 0xFF - Check connections/power\n\r");
+            }
+            if (status_byte == 0x00) {
+                printf("  Status 0x00 - Check CS pin/timing\n\r");
+            }
         }
     }
     

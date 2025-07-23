@@ -70,11 +70,21 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
     HAL_StatusTypeDef status;
     uint8_t rx_data;
 
+    // Debug: Check CS pin before transaction
+    printf("  Strobe 0x%02X: CS before=", strobe_command);
+    printf("%s", HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN) == GPIO_PIN_SET ? "HIGH" : "LOW");
+
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
+    
+    // Small delay to ensure CS is stable
+    HAL_Delay(1);
 
     status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, HAL_MAX_DELAY); // Transmit strobe command and receive status
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
+
+    // Debug output
+    printf(", CS after=HIGH, RX=0x%02X, HAL=%d\n\r", rx_data, status);
 
     if (status == HAL_OK) {
         if (status_byte != NULL) {
