@@ -876,6 +876,55 @@ int main(void)
   
   // First, test SPI2 peripheral directly
   printf("Testing SPI2 peripheral directly...\n\r");
+  printf("SPI2 Initial Config: State=%d, Mode=%lu, DataSize=%lu, BaudRate=%lu\n\r",
+         CC1201_SPI_HANDLE.State, 
+         CC1201_SPI_HANDLE.Init.Mode,
+         CC1201_SPI_HANDLE.Init.DataSize,
+         CC1201_SPI_HANDLE.Init.BaudRatePrescaler);
+  
+  // Try to fix SPI2 configuration
+  printf("Attempting to reconfigure SPI2...\n\r");
+  
+  // Deinitialize SPI2
+  HAL_SPI_DeInit(&CC1201_SPI_HANDLE);
+  
+  // Reconfigure SPI2 manually
+  CC1201_SPI_HANDLE.Instance = SPI2;
+  CC1201_SPI_HANDLE.Init.Mode = SPI_MODE_MASTER;
+  CC1201_SPI_HANDLE.Init.Direction = SPI_DIRECTION_2LINES;
+  CC1201_SPI_HANDLE.Init.DataSize = SPI_DATASIZE_8BIT;
+  CC1201_SPI_HANDLE.Init.CLKPolarity = SPI_POLARITY_LOW;    // CPOL = 0
+  CC1201_SPI_HANDLE.Init.CLKPhase = SPI_PHASE_1EDGE;       // CPHA = 0
+  CC1201_SPI_HANDLE.Init.NSS = SPI_NSS_SOFT;
+  CC1201_SPI_HANDLE.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32; // Slower speed
+  CC1201_SPI_HANDLE.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  CC1201_SPI_HANDLE.Init.TIMode = SPI_TIMODE_DISABLE;
+  CC1201_SPI_HANDLE.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  CC1201_SPI_HANDLE.Init.CRCPolynomial = 0x0;
+  CC1201_SPI_HANDLE.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  CC1201_SPI_HANDLE.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
+  CC1201_SPI_HANDLE.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
+  CC1201_SPI_HANDLE.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  CC1201_SPI_HANDLE.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  CC1201_SPI_HANDLE.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
+  CC1201_SPI_HANDLE.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+  CC1201_SPI_HANDLE.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
+  CC1201_SPI_HANDLE.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
+  CC1201_SPI_HANDLE.Init.IOSwap = SPI_IO_SWAP_DISABLE;
+  
+  HAL_StatusTypeDef spi_init_result = HAL_SPI_Init(&CC1201_SPI_HANDLE);
+  printf("SPI2 reinitialization result: %d\n\r", spi_init_result);
+  
+  if (spi_init_result == HAL_OK) {
+      printf("SPI2 Reconfigured - State=%d, Mode=%lu, DataSize=%lu, BaudRate=%lu\n\r",
+             CC1201_SPI_HANDLE.State, 
+             CC1201_SPI_HANDLE.Init.Mode,
+             CC1201_SPI_HANDLE.Init.DataSize,
+             CC1201_SPI_HANDLE.Init.BaudRatePrescaler);
+  } else {
+      printf("SPI2 reconfiguration failed!\n\r");
+  }
+  
   uint8_t spi_test_tx = 0xAA;
   uint8_t spi_test_rx = 0x00;
   
