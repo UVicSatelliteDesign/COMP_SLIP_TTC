@@ -794,23 +794,8 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   
-  // Test GPIO pins first
-  test_GPIO_pins();
-  
-  // Initialize and test CC1201 communication
-  printf("Starting CC1201 initialization...\n\r");
-  HAL_Delay(100); // Give CC1201 time to power up
-  
-  if (initialize_CC1201() == HAL_OK) {
-      printf("CC1201 initialization successful!\n\r");
-      BSP_LED_On(LED_GREEN);
-  } else {
-      printf("CC1201 initialization failed!\n\r");
-      BSP_LED_On(LED_RED);
-  }
-  
-  // Run initial strobe command tests
-  test_CC1201_strobe_commands();
+  // Basic hardware initialization completed
+  // CC1201 testing will be done after UART is initialized
 
   /* USER CODE END 2 */
 
@@ -842,6 +827,26 @@ int main(void)
   BSP_LED_On(LED_GREEN);
   BSP_LED_On(LED_YELLOW);
   BSP_LED_On(LED_RED);
+  
+  // Now that UART is initialized, start CC1201 testing
+  printf("\n=== CC1201 COMMUNICATION SYSTEM STARTUP ===\n\r");
+  
+  // Test GPIO pins first
+  test_GPIO_pins();
+  
+  // Initialize and test CC1201 communication
+  printf("Starting CC1201 initialization...\n\r");
+  HAL_Delay(100); // Give CC1201 time to power up
+  
+  if (initialize_CC1201() == HAL_OK) {
+      printf("CC1201 initialization successful!\n\r");
+      BSP_LED_Off(LED_RED);
+      BSP_LED_On(LED_GREEN);
+  } else {
+      printf("CC1201 initialization failed!\n\r");
+      BSP_LED_Off(LED_GREEN);
+      BSP_LED_On(LED_RED);
+  }
 
   /* USER CODE END BSP */
 
