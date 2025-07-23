@@ -76,6 +76,10 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
     
+    // Debug: Check CS pin during transaction
+    printf(", CS during=");
+    printf("%s", HAL_GPIO_ReadPin(CC1201_CS_PORT, CC1201_CS_PIN) == GPIO_PIN_SET ? "HIGH" : "LOW");
+    
     // Small delay to ensure CS is stable
     HAL_Delay(1);
 

@@ -361,9 +361,27 @@ int main(void)
         
         printf("Periodic test - HAL Status: %d, CC1201 Status: 0x%02X\n\r", hal_status, status_byte);
         
-        if (hal_status == HAL_OK && status_byte != 0xFF && status_byte != 0x00) {
-            BSP_LED_On(LED_GREEN);  // Communication OK
+        // Decode CC1201 status byte
+        uint8_t radio_state = (status_byte >> 4) & 0x0F;
+        uint8_t fifo_bytes = status_byte & 0x0F;
+        printf("  Radio State: 0x%X", radio_state);
+        switch(radio_state) {
+            case 0x0: printf(" (IDLE)"); break;
+            case 0x1: printf(" (RX)"); break;
+            case 0x2: printf(" (TX)"); break;
+            case 0x3: printf(" (FSTXON)"); break;
+            case 0x4: printf(" (CALIBRATE)"); break;
+            case 0x5: printf(" (SETTLING)"); break;
+            case 0x6: printf(" (RX_FIFO_ERR)"); break;
+            case 0x7: printf(" (TX_FIFO_ERR)"); break;
+            default: printf(" (UNKNOWN)"); break;
+        }
+        printf(", FIFO: %d bytes\n\r", fifo_bytes);
+        
+        if (hal_status == HAL_OK && radio_state == 0x0) {
+            BSP_LED_On(LED_GREEN);  // Communication OK and radio in expected state
             BSP_LED_Off(LED_RED);
+            printf("  ✓ Communication working! CC1201 responding correctly.\n\r");
         } else {
             BSP_LED_Off(LED_GREEN);
             BSP_LED_On(LED_RED);   // Communication error
@@ -466,16 +484,16 @@ static void MX_SPI2_Init(void)
   hspi2.Instance = SPI2;
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi2.Init.CRCPolynomial = 0x0;
-  hspi2.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   hspi2.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
   hspi2.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
   hspi2.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
