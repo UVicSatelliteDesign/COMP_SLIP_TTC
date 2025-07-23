@@ -624,37 +624,48 @@ HAL_StatusTypeDef initialize_CC1201(void) {
     HAL_StatusTypeDef hal_status;
     
     printf("Initializing CC1201...\n\r");
+    printf("  Step 1: About to call SoftReset...\n\r");
     
     // Step 1: Soft reset
     hal_status = CC1201_SoftReset(&status_byte);
+    printf("  Step 1: SoftReset returned - HAL Status: %d, Status Byte: 0x%02X\n\r", hal_status, status_byte);
+    
     if (hal_status != HAL_OK) {
-        printf("CC1201 Reset Failed!\n\r");
+        printf("CC1201 Reset Failed! HAL Status: %d\n\r", hal_status);
         return hal_status;
     }
     printf("CC1201 Reset OK - Status: 0x%02X\n\r", status_byte);
     
+    printf("  Step 2: Waiting 100ms after reset...\n\r");
     HAL_Delay(100); // Wait for reset to complete
     
+    printf("  Step 3: Getting preferred settings...\n\r");
     // Step 2: Write preferred settings (basic registers only)
     const registerSetting_t* settings = CC1201_GetPreferredSettings();
     uint16_t num_settings = CC1201_GetNumPreferredSettings();
     
     printf("Writing %d configuration registers...\n\r", num_settings);
     hal_status = CC1201_WriteRegisterConfig(settings, num_settings);
+    printf("  Step 3: WriteRegisterConfig returned - HAL Status: %d\n\r", hal_status);
+    
     if (hal_status != HAL_OK) {
-        printf("Configuration write failed!\n\r");
+        printf("Configuration write failed! HAL Status: %d\n\r", hal_status);
         return hal_status;
     }
     printf("Configuration complete!\n\r");
     
+    printf("  Step 4: Entering IDLE mode...\n\r");
     // Step 3: Enter idle mode
     hal_status = CC1201_EnterIdleMode(&status_byte);
+    printf("  Step 4: EnterIdleMode returned - HAL Status: %d, Status Byte: 0x%02X\n\r", hal_status, status_byte);
+    
     if (hal_status != HAL_OK) {
-        printf("Enter Idle Failed!\n\r");
+        printf("Enter Idle Failed! HAL Status: %d\n\r", hal_status);
         return hal_status;
     }
     printf("Enter Idle OK - Status: 0x%02X\n\r", status_byte);
     
+    printf("CC1201 initialization completed successfully!\n\r");
     return HAL_OK;
 }
 
