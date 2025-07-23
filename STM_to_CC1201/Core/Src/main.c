@@ -874,6 +874,26 @@ int main(void)
   printf("Starting simple CC1201 test...\n\r");
   HAL_Delay(100);
   
+  // First, test SPI2 peripheral directly
+  printf("Testing SPI2 peripheral directly...\n\r");
+  uint8_t spi_test_tx = 0xAA;
+  uint8_t spi_test_rx = 0x00;
+  
+  HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // CS Low
+  HAL_StatusTypeDef spi_test_result = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &spi_test_tx, &spi_test_rx, 1, 100);
+  HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // CS High
+  
+  printf("Direct SPI test - HAL: %d, TX: 0x%02X, RX: 0x%02X\n\r", spi_test_result, spi_test_tx, spi_test_rx);
+  
+  if (spi_test_result == HAL_OK) {
+      printf("SPI2 peripheral working!\n\r");
+  } else {
+      printf("SPI2 peripheral failed! Error: %d\n\r", spi_test_result);
+      if (spi_test_result == HAL_TIMEOUT) printf("  -> SPI TIMEOUT\n\r");
+      if (spi_test_result == HAL_ERROR) printf("  -> SPI ERROR\n\r");
+      if (spi_test_result == HAL_BUSY) printf("  -> SPI BUSY\n\r");
+  }
+  
   printf("Test 1: Creating status byte variable...\n\r");
   uint8_t test_status = 0;
   
