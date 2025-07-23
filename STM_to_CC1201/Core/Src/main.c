@@ -476,6 +476,231 @@ void test_fifo_operations(void) {
     printf("=== FIFO OPERATIONS TEST COMPLETE ===\n\r");
 }
 
+// New comprehensive buffer read/write with verification test
+void test_buffer_readwrite_verification(void) {
+    HAL_StatusTypeDef hal_status;
+    uint8_t status_byte = 0;
+    
+    printf("\n=== BUFFER READ/WRITE VERIFICATION TEST ===\n\r");
+    
+    // This test demonstrates comprehensive buffer operations with full transparency
+    
+    // 1. Enter IDLE and clear FIFOs
+    printf("1. INITIALIZING TEST STATE\n\r");
+    hal_status = CC1201_EnterIdleMode(&status_byte);
+    if (hal_status == HAL_OK) {
+        print_cc1201_status(status_byte, "ENTER_IDLE");
+    } else {
+        printf("  ✗ Failed to enter IDLE - HAL: %d\n\r", hal_status);
+        return;
+    }
+    
+    // Clear FIFOs
+    CC1201_FlushTxFifo(&status_byte);
+    print_cc1201_status(status_byte, "FLUSH_TX");
+    CC1201_FlushRxFifo(&status_byte);
+    print_cc1201_status(status_byte, "FLUSH_RX");
+    
+    // 2. Test different data patterns
+    printf("\n2. TESTING MULTIPLE DATA PATTERNS\n\r");
+    
+    uint8_t patterns[][8] = {
+        {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77},  // Sequential
+        {0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55},  // Alternating
+        {0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00},  // High/Low
+        {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80}   // Bit shifts
+    };
+    
+    const char* pattern_names[] = {"SEQUENTIAL", "ALTERNATING", "HIGH_LOW", "BIT_SHIFT"};
+    
+    for (int p = 0; p < 4; p++) {
+        printf("\n  Pattern %d: %s\n\r", p+1, pattern_names[p]);
+        printf("  Data: ");
+        for (int i = 0; i < 8; i++) {
+            printf("0x%02X ", patterns[p][i]);
+        }
+        printf("\n\r");
+        
+        // Write pattern to TX FIFO
+        hal_status = CC1201_WriteTxFifo(patterns[p], 8, &status_byte);
+        if (hal_status == HAL_OK) {
+            printf("  ✓ Write SUCCESS ");
+            print_cc1201_status(status_byte, "PATTERN_WRITE");
+            
+            // Check FIFO count
+            uint8_t fifo_count = 0;
+            CC1201_GetNumTXBytes(&fifo_count);
+            printf("  FIFO count: %d bytes\n\r", fifo_count);
+            
+            // Clear FIFO for next test
+            CC1201_FlushTxFifo(&status_byte);
+            printf("  Flushed for next test\n\r");
+        } else {
+            printf("  ✗ Write FAILED - HAL: %d\n\r", hal_status);
+        }
+    }
+    
+    // 3. Test single byte operations with verification
+    printf("\n3. SINGLE BYTE OPERATIONS TEST\n\r");
+    uint8_t test_bytes[] = {0x42, 0x69, 0xA5, 0x3C, 0xF0};
+    
+    for (int i = 0; i < 5; i++) {
+        printf("  Writing byte %d: 0x%02X\n\r", i+1, test_bytes[i]);
+        hal_status = CC1201_WriteSingleTxFifo(test_bytes[i], &status_byte);
+        if (hal_status == HAL_OK) {
+            printf("    ✓ Single write SUCCESS ");
+            print_cc1201_status(status_byte, "SINGLE_BYTE");
+        } else {
+            printf("    ✗ Single write FAILED - HAL: %d\n\r", hal_status);
+        }
+    }
+    
+    // Check final FIFO count
+    uint8_t final_count = 0;
+    CC1201_GetNumTXBytes(&final_count);
+    printf("  Final TX FIFO: %d bytes (expected: 5)\n\r", final_count);
+    
+    // 4. Test state transitions with data
+    printf("\n4. STATE TRANSITION WITH BUFFER DATA\n\r");
+    hal_status = CC1201_EnterTxMode(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  ✓ Entered TX mode with %d bytes in FIFO\n\r", final_count);
+        print_cc1201_status(status_byte, "TX_MODE_WITH_DATA");
+        
+        HAL_Delay(50); // Allow some time for potential transmission
+        
+        // Check status after time in TX mode
+        CC1201_Nop(&status_byte);
+        print_cc1201_status(status_byte, "TX_AFTER_DELAY");
+        
+        // Return to IDLE
+        CC1201_EnterIdleMode(&status_byte);
+        print_cc1201_status(status_byte, "RETURN_TO_IDLE");
+    }
+    
+    // 5. Final cleanup
+    printf("\n5. FINAL CLEANUP AND VERIFICATION\n\r");
+    CC1201_FlushTxFifo(&status_byte);
+    print_cc1201_status(status_byte, "FINAL_CLEANUP");
+    
+    uint8_t cleanup_count = 0;
+    CC1201_GetNumTXBytes(&cleanup_count);
+    printf("  Final FIFO count: %d (should be 0)\n\r", cleanup_count);
+    
+    if (cleanup_count == 0) {
+        printf("  ✓ BUFFER TEST COMPLETED SUCCESSFULLY\n\r");
+    } else {
+        printf("  ⚠ FIFO not completely empty after cleanup\n\r");
+    }
+    
+    printf("=== BUFFER VERIFICATION TEST COMPLETE ===\n\r");
+}
+
+// CC1201 Communication Verification Test
+void test_cc1201_communication_verification(void) {
+    HAL_StatusTypeDef hal_status;
+    uint8_t status_byte = 0;
+    
+    printf("\n=== CC1201 COMMUNICATION VERIFICATION TEST ===\n\r");
+    
+    // 1. Test basic communication with different strobe commands
+    printf("1. TESTING BASIC STROBE RESPONSES\n\r");
+    
+    // Test NOP command multiple times to see if we get consistent responses
+    for (int i = 0; i < 5; i++) {
+        hal_status = CC1201_Nop(&status_byte);
+        printf("  NOP %d: HAL=%d, Status=0x%02X ", i+1, hal_status, status_byte);
+        if (hal_status == HAL_OK) {
+            print_cc1201_status(status_byte, "NOP_TEST");
+        } else {
+            printf(" - COMMUNICATION FAILED\n\r");
+        }
+    }
+    
+    // 2. Test soft reset to see if status changes
+    printf("\n2. TESTING SOFT RESET RESPONSE\n\r");
+    hal_status = CC1201_SoftReset(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Soft Reset: ");
+        print_cc1201_status(status_byte, "RESET");
+        
+        // Wait for reset to complete and test again
+        HAL_Delay(100);
+        hal_status = CC1201_Nop(&status_byte);
+        if (hal_status == HAL_OK) {
+            printf("  After Reset: ");
+            print_cc1201_status(status_byte, "POST_RESET");
+        }
+    } else {
+        printf("  ✗ Soft Reset FAILED - HAL: %d\n\r", hal_status);
+    }
+    
+    // 3. Test different states to see if we get different status responses
+    printf("\n3. TESTING STATE TRANSITIONS\n\r");
+    
+    // Try to enter IDLE
+    hal_status = CC1201_EnterIdleMode(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  IDLE Mode: ");
+        print_cc1201_status(status_byte, "IDLE_ENTRY");
+    }
+    
+    // Try calibration
+    hal_status = CC1201_CalFreqSynth(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Calibrate: ");
+        print_cc1201_status(status_byte, "CALIBRATE");
+        HAL_Delay(50); // Wait for calibration
+    }
+    
+    // Try fast TX on
+    hal_status = CC1201_FastTxOn(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Fast TX On: ");
+        print_cc1201_status(status_byte, "FAST_TX_ON");
+    }
+    
+    // Return to IDLE
+    hal_status = CC1201_EnterIdleMode(&status_byte);
+    if (hal_status == HAL_OK) {
+        printf("  Return IDLE: ");
+        print_cc1201_status(status_byte, "RETURN_IDLE");
+    }
+    
+    // 4. Test register read to verify communication
+    printf("\n4. TESTING REGISTER READ OPERATIONS\n\r");
+    
+    uint8_t chip_id = 0;
+    hal_status = CC1201_ReadStatus(CC1201_MARCSTATE, &chip_id);
+    if (hal_status == HAL_OK) {
+        printf("  MARCSTATE: 0x%02X\n\r", chip_id);
+    } else {
+        printf("  ✗ MARCSTATE read failed - HAL: %d\n\r", hal_status);
+    }
+    
+    uint8_t marc_state = 0;
+    hal_status = CC1201_ReadMARCState(&marc_state);
+    if (hal_status == HAL_OK) {
+        printf("  MARC_STATE: 0x%02X\n\r", marc_state);
+    } else {
+        printf("  ✗ MARC_STATE read failed - HAL: %d\n\r", hal_status);
+    }
+    
+    // 5. Analyze status byte patterns
+    printf("\n5. STATUS BYTE ANALYSIS\n\r");
+    printf("  If all status bytes are 0x00, this suggests:\n\r");
+    printf("  - CC1201 may not be responding (check power/connections)\n\r");
+    printf("  - SPI communication issue (check MISO line)\n\r");
+    printf("  - CC1201 may be in reset or powered down\n\r");
+    printf("  \n\r");
+    printf("  Normal CC1201 status should show:\n\r");
+    printf("  - Bits [7:4]: Current state (0=IDLE, 1=RX, 2=TX, etc.)\n\r");
+    printf("  - Bits [3:0]: FIFO bytes or chip status info\n\r");
+    printf("  - A functioning CC1201 should rarely return exactly 0x00\n\r");
+    
+    printf("=== COMMUNICATION VERIFICATION COMPLETE ===\n\r");
+}
+
 // Advanced power state testing
 void test_power_states(void) {
     HAL_StatusTypeDef hal_status;
@@ -984,13 +1209,13 @@ int main(void)
       BSP_LED_Toggle(LED_RED);
 
       /* ..... Perform your action ..... */
-      printf("\n[BUTTON] Manual test triggered...\n\r");
-      uint8_t button_status = 0;
-      HAL_StatusTypeDef button_result = CC1201_Nop(&button_status);
-      printf("Button test - HAL: %d, Status: 0x%02X\n\r", button_result, button_status);
+      printf("\n[BUTTON] Manual comprehensive test triggered...\n\r");
+      test_cc1201_communication_verification();
+      test_fifo_operations();
+      test_buffer_readwrite_verification();
     }
     
-    // Simple periodic test every 5 seconds
+    // Simple periodic test every 5 seconds  
     if (HAL_GetTick() - last_test > 5000) {
       printf("[%lu] Test %lu: ", HAL_GetTick(), ++test_counter);
       
@@ -998,9 +1223,22 @@ int main(void)
       HAL_StatusTypeDef hal_status = CC1201_Nop(&status_byte);
       
       if (hal_status == HAL_OK) {
-        printf("OK - Status: 0x%02X\n\r", status_byte);
+        printf("OK ");
+        print_cc1201_status(status_byte, "NOP_STATUS");
         BSP_LED_On(LED_GREEN);
         BSP_LED_Off(LED_RED);
+        
+        // Every 10th test, run comprehensive buffer test
+        if (test_counter % 10 == 0) {
+          printf("\n[PERIODIC] Running comprehensive buffer test...\n\r");
+          test_fifo_operations();
+        }
+        
+        // Every 20th test, run communication verification
+        if (test_counter % 20 == 0) {
+          printf("\n[PERIODIC] Running communication verification...\n\r");
+          test_cc1201_communication_verification();
+        }
       } else {
         printf("FAILED - HAL: %d\n\r", hal_status);
         BSP_LED_Off(LED_GREEN);
