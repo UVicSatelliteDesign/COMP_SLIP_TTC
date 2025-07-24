@@ -4,6 +4,7 @@
 "./Core/Src/CC1201_simple_link_reg_config.o"
 "./Core/Src/STM32_pin_diagnostic.o"
 "./Core/Src/main.o"
+"./Core/Src/manual_spi_config.o"
 "./Core/Src/stm32h7xx_hal_msp.o"
 "./Core/Src/stm32h7xx_it.o"
 "./Core/Src/syscalls.o"

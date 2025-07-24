@@ -11,6 +11,7 @@ C_SRCS += \
 ../Core/Src/CC1201_simple_link_reg_config.c \
 ../Core/Src/STM32_pin_diagnostic.c \
 ../Core/Src/main.c \
+../Core/Src/manual_spi_config.c \
 ../Core/Src/stm32h7xx_hal_msp.c \
 ../Core/Src/stm32h7xx_it.c \
 ../Core/Src/syscalls.c \
@@ -24,6 +25,7 @@ OBJS += \
 ./Core/Src/CC1201_simple_link_reg_config.o \
 ./Core/Src/STM32_pin_diagnostic.o \
 ./Core/Src/main.o \
+./Core/Src/manual_spi_config.o \
 ./Core/Src/stm32h7xx_hal_msp.o \
 ./Core/Src/stm32h7xx_it.o \
 ./Core/Src/syscalls.o \
@@ -37,6 +39,7 @@ C_DEPS += \
 ./Core/Src/CC1201_simple_link_reg_config.d \
 ./Core/Src/STM32_pin_diagnostic.d \
 ./Core/Src/main.d \
+./Core/Src/manual_spi_config.d \
 ./Core/Src/stm32h7xx_hal_msp.d \
 ./Core/Src/stm32h7xx_it.d \
 ./Core/Src/syscalls.d \
@@ -51,7 +54,7 @@ Core/Src/%.o Core/Src/%.su Core/Src/%.cyclo: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/CC1201_commands.cyclo ./Core/Src/CC1201_commands.d ./Core/Src/CC1201_commands.o ./Core/Src/CC1201_commands.su ./Core/Src/CC1201_detection.cyclo ./Core/Src/CC1201_detection.d ./Core/Src/CC1201_detection.o ./Core/Src/CC1201_detection.su ./Core/Src/CC1201_hardware_test.cyclo ./Core/Src/CC1201_hardware_test.d ./Core/Src/CC1201_hardware_test.o ./Core/Src/CC1201_hardware_test.su ./Core/Src/CC1201_simple_link_reg_config.cyclo ./Core/Src/CC1201_simple_link_reg_config.d ./Core/Src/CC1201_simple_link_reg_config.o ./Core/Src/CC1201_simple_link_reg_config.su ./Core/Src/STM32_pin_diagnostic.cyclo ./Core/Src/STM32_pin_diagnostic.d ./Core/Src/STM32_pin_diagnostic.o ./Core/Src/STM32_pin_diagnostic.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32h7xx_hal_msp.cyclo ./Core/Src/stm32h7xx_hal_msp.d ./Core/Src/stm32h7xx_hal_msp.o ./Core/Src/stm32h7xx_hal_msp.su ./Core/Src/stm32h7xx_it.cyclo ./Core/Src/stm32h7xx_it.d ./Core/Src/stm32h7xx_it.o ./Core/Src/stm32h7xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32h7xx.cyclo ./Core/Src/system_stm32h7xx.d ./Core/Src/system_stm32h7xx.o ./Core/Src/system_stm32h7xx.su
+	-$(RM) ./Core/Src/CC1201_commands.cyclo ./Core/Src/CC1201_commands.d ./Core/Src/CC1201_commands.o ./Core/Src/CC1201_commands.su ./Core/Src/CC1201_detection.cyclo ./Core/Src/CC1201_detection.d ./Core/Src/CC1201_detection.o ./Core/Src/CC1201_detection.su ./Core/Src/CC1201_hardware_test.cyclo ./Core/Src/CC1201_hardware_test.d ./Core/Src/CC1201_hardware_test.o ./Core/Src/CC1201_hardware_test.su ./Core/Src/CC1201_simple_link_reg_config.cyclo ./Core/Src/CC1201_simple_link_reg_config.d ./Core/Src/CC1201_simple_link_reg_config.o ./Core/Src/CC1201_simple_link_reg_config.su ./Core/Src/STM32_pin_diagnostic.cyclo ./Core/Src/STM32_pin_diagnostic.d ./Core/Src/STM32_pin_diagnostic.o ./Core/Src/STM32_pin_diagnostic.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/manual_spi_config.cyclo ./Core/Src/manual_spi_config.d ./Core/Src/manual_spi_config.o ./Core/Src/manual_spi_config.su ./Core/Src/stm32h7xx_hal_msp.cyclo ./Core/Src/stm32h7xx_hal_msp.d ./Core/Src/stm32h7xx_hal_msp.o ./Core/Src/stm32h7xx_hal_msp.su ./Core/Src/stm32h7xx_it.cyclo ./Core/Src/stm32h7xx_it.d ./Core/Src/stm32h7xx_it.o ./Core/Src/stm32h7xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32h7xx.cyclo ./Core/Src/system_stm32h7xx.d ./Core/Src/system_stm32h7xx.o ./Core/Src/system_stm32h7xx.su
 
 .PHONY: clean-Core-2f-Src
 

@@ -27,6 +27,7 @@
 #include "CC1201_hardware_test.h"
 #include "STM32_pin_diagnostic.h"
 #include "CC1201_detection.h"
+#include "manual_spi_config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -1116,6 +1117,15 @@ int main(void)
          (GPIOE->MODER >> 8) & 0x3,
          HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4) ? "HIGH" : "LOW");
   
+  // CRITICAL FIX: The pins are in ANALOG mode (3) instead of AF mode (2)
+  // This means SPI2 is NOT connected to the pins!
+  if (((GPIOA->MODER >> 12) & 0x3) == 3 || ((GPIOA->MODER >> 20) & 0x3) == 3 || ((GPIOB->MODER >> 20) & 0x3) == 3) {
+    printf("\n⚠️ CRITICAL: SPI pins in ANALOG mode - applying manual fix...\n\r");
+    Manual_SPI2_Pin_Config();
+  } else {
+    printf("\n✅ SPI pins already in correct AF mode\n\r");
+  }
+  
   HAL_Delay(100);
   
   // First, test SPI2 peripheral directly
@@ -1229,6 +1239,7 @@ int main(void)
 
       /* ..... Perform your action ..... */
       printf("\n[BUTTON] Manual comprehensive test triggered...\n\r");
+      Manual_SPI2_Pin_Config();  // Fix pins first
       CC1201_ChipDetectionTest();
       STM32_PinConfigDiagnostic();
       CC1201_HardwareDiagnostic();
