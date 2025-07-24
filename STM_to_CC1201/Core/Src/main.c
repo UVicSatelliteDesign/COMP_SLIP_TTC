@@ -28,6 +28,7 @@
 #include "STM32_pin_diagnostic.h"
 #include "CC1201_detection.h"
 #include "manual_spi_config.h"
+#include "alternative_spi_test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -1243,6 +1244,11 @@ int main(void)
       CC1201_ChipDetectionTest();
       STM32_PinConfigDiagnostic();
       CC1201_HardwareDiagnostic();
+      
+      // NEW: Test alternative SPI pin mappings
+      printf("\n🔍 TESTING ALTERNATIVE SPI PIN MAPPINGS...\n\r");
+      Test_Alternative_SPI2_Pins();
+      
       test_cc1201_communication_verification();
       test_fifo_operations();
       test_buffer_readwrite_verification();
