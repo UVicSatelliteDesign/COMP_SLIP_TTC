@@ -25,6 +25,8 @@
 #include "CC1201_simple_link_reg_config.h"
 #include "CC1201_reg.h"
 #include "CC1201_hardware_test.h"
+#include "STM32_pin_diagnostic.h"
+#include "CC1201_detection.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -1098,6 +1100,22 @@ int main(void)
   
   // Simple test instead of full initialization
   printf("Starting simple CC1201 test...\n\r");
+  
+  // Quick pin configuration check
+  printf("QUICK PIN CHECK:\n\r");
+  printf("  PA6 (MISO): MODE=%lu, STATE=%s\n\r", 
+         (GPIOA->MODER >> 12) & 0x3,
+         HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_6) ? "HIGH" : "LOW");
+  printf("  PA10 (MOSI): MODE=%lu, STATE=%s\n\r", 
+         (GPIOA->MODER >> 20) & 0x3,
+         HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10) ? "HIGH" : "LOW");
+  printf("  PB10 (SCK): MODE=%lu, STATE=%s\n\r", 
+         (GPIOB->MODER >> 20) & 0x3,
+         HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) ? "HIGH" : "LOW");
+  printf("  PE4 (CS): MODE=%lu, STATE=%s\n\r", 
+         (GPIOE->MODER >> 8) & 0x3,
+         HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4) ? "HIGH" : "LOW");
+  
   HAL_Delay(100);
   
   // First, test SPI2 peripheral directly
@@ -1211,6 +1229,8 @@ int main(void)
 
       /* ..... Perform your action ..... */
       printf("\n[BUTTON] Manual comprehensive test triggered...\n\r");
+      CC1201_ChipDetectionTest();
+      STM32_PinConfigDiagnostic();
       CC1201_HardwareDiagnostic();
       test_cc1201_communication_verification();
       test_fifo_operations();
