@@ -134,13 +134,14 @@ void STM32_PinConfigDiagnostic(void) {
     printf("    SPI2->CFG1: 0x%08lX\n\r", (unsigned long)SPI2->CFG1);
     printf("    SPI2->CFG2: 0x%08lX\n\r", (unsigned long)SPI2->CFG2);
     
-    // Decode important bits
+    // Decode important bits for STM32H7
     uint32_t cr1 = SPI2->CR1;
-    printf("    SPI2 Decoded:\n\r");
+    uint32_t cfg2 = SPI2->CFG2;
+    printf("    SPI2 Decoded (STM32H7):\n\r");
     printf("      SPE (Enable): %s\n\r", (cr1 & SPI_CR1_SPE) ? "ENABLED" : "DISABLED");
-    printf("      MSTR (Master): %s\n\r", (cr1 & SPI_CR1_MSTR) ? "MASTER" : "SLAVE");
+    printf("      MASTER (from CFG2): %s\n\r", (cfg2 & SPI_CFG2_MASTER) ? "MASTER" : "SLAVE");
     printf("      SSI (Internal SS): %s\n\r", (cr1 & SPI_CR1_SSI) ? "HIGH" : "LOW");
-    printf("      SSM (Software SS): %s\n\r", (cr1 & SPI_CR1_SSM) ? "ENABLED" : "DISABLED");
+    printf("      SSOE (SS Output Enable): %s\n\r", (cfg2 & SPI_CFG2_SSOE) ? "ENABLED" : "DISABLED");
     
     // 6. Clock Configuration Check
     printf("\n6. CLOCK CONFIGURATION CHECK\n\r");

@@ -19,7 +19,7 @@ uint8_t CC1201_ChipDetectionTest(void) {
     printf("1. Testing NOP command pattern:\n\r");
     for (int i = 0; i < 8; i++) {
         uint8_t status = 0;
-        HAL_StatusTypeDef result = CC1201_SendStrobe(0x3D, &status); // NOP
+        CC1201_SendStrobe(0x3D, &status); // NOP
         response_pattern[i] = status;
         printf("   NOP %d: 0x%02X", i+1, status);
         
@@ -38,7 +38,7 @@ uint8_t CC1201_ChipDetectionTest(void) {
     
     for (int i = 0; i < 8; i++) {
         uint8_t status = 0;
-        HAL_StatusTypeDef result = CC1201_SendStrobe(strobes[i], &status);
+        CC1201_SendStrobe(strobes[i], &status);
         response_pattern[i + 8] = status;
         printf("   %s: 0x%02X", names[i], status);
         

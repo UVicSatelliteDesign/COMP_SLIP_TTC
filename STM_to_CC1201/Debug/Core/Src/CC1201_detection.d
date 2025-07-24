@@ -1,5 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
- ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h \
+Core/Src/CC1201_detection.o: ../Core/Src/CC1201_detection.c \
+ ../Core/Inc/main.h ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h \
  ../Core/Inc/stm32h7xx_hal_conf.h \
  ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h \
  ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h \
@@ -36,10 +36,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo_errno.h \
  ../Core/Inc/CC1201_commands.h \
  ../Core/Inc/CC1201_simple_link_reg_config.h ../Core/Inc/main.h \
- ../Core/Inc/CC1201_commands.h \
- ../Core/Inc/CC1201_simple_link_reg_config.h ../Core/Inc/CC1201_reg.h \
- ../Core/Inc/CC1201_hardware_test.h ../Core/Inc/STM32_pin_diagnostic.h \
- ../Core/Inc/CC1201_detection.h
+ ../Core/Inc/CC1201_simple_link_reg_config.h
 ../Core/Inc/main.h:
 ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
 ../Core/Inc/stm32h7xx_hal_conf.h:
@@ -79,9 +76,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/CC1201_commands.h:
 ../Core/Inc/CC1201_simple_link_reg_config.h:
 ../Core/Inc/main.h:
-../Core/Inc/CC1201_commands.h:
 ../Core/Inc/CC1201_simple_link_reg_config.h:
-../Core/Inc/CC1201_reg.h:
-../Core/Inc/CC1201_hardware_test.h:
-../Core/Inc/STM32_pin_diagnostic.h:
-../Core/Inc/CC1201_detection.h:
