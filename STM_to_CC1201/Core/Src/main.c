@@ -29,6 +29,7 @@
 #include "CC1201_detection.h"
 #include "manual_spi_config.h"
 #include "alternative_spi_test.h"
+#include "hardware_discovery.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -1239,16 +1240,25 @@ int main(void)
       BSP_LED_Toggle(LED_RED);
 
       /* ..... Perform your action ..... */
-      printf("\n[BUTTON] Manual comprehensive test triggered...\n\r");
+      printf("\n[BUTTON] HARDWARE DISCOVERY MODE - Finding real CC1201 connections...\n\r");
+      
+      // Step 1: Hardware Discovery (most important!)
+      printf("\n🔍 STEP 1: SCANNING HARDWARE CONNECTIONS...\n\r");
+      Hardware_Discovery_Scan();
+      
+      // Step 2: Standard diagnostics
+      printf("\n🔧 STEP 2: STANDARD DIAGNOSTICS...\n\r");
       Manual_SPI2_Pin_Config();  // Fix pins first
       CC1201_ChipDetectionTest();
       STM32_PinConfigDiagnostic();
       CC1201_HardwareDiagnostic();
       
-      // NEW: Test alternative SPI pin mappings
-      printf("\n🔍 TESTING ALTERNATIVE SPI PIN MAPPINGS...\n\r");
+      // Step 3: Alternative pin testing (if needed)
+      printf("\n� STEP 3: ALTERNATIVE PIN TESTING...\n\r");
       Test_Alternative_SPI2_Pins();
       
+      // Step 4: Communication tests
+      printf("\n📡 STEP 4: COMMUNICATION TESTS...\n\r");
       test_cc1201_communication_verification();
       test_fifo_operations();
       test_buffer_readwrite_verification();
