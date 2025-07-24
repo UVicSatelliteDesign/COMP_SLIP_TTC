@@ -1,4 +1,5 @@
 "./Core/Src/CC1201_commands.o"
+"./Core/Src/CC1201_hardware_test.o"
 "./Core/Src/CC1201_simple_link_reg_config.o"
 "./Core/Src/main.o"
 "./Core/Src/stm32h7xx_hal_msp.o"

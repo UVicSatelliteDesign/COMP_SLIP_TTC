@@ -24,6 +24,7 @@
 #include "CC1201_commands.h"
 #include "CC1201_simple_link_reg_config.h"
 #include "CC1201_reg.h"
+#include "CC1201_hardware_test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -1210,6 +1211,7 @@ int main(void)
 
       /* ..... Perform your action ..... */
       printf("\n[BUTTON] Manual comprehensive test triggered...\n\r");
+      CC1201_HardwareDiagnostic();
       test_cc1201_communication_verification();
       test_fifo_operations();
       test_buffer_readwrite_verification();
@@ -1238,6 +1240,12 @@ int main(void)
         if (test_counter % 20 == 0) {
           printf("\n[PERIODIC] Running communication verification...\n\r");
           test_cc1201_communication_verification();
+        }
+        
+        // Every 30th test, run hardware diagnostic
+        if (test_counter % 30 == 0) {
+          printf("\n[PERIODIC] Running hardware diagnostic...\n\r");
+          CC1201_HardwareDiagnostic();
         }
       } else {
         printf("FAILED - HAL: %d\n\r", hal_status);
