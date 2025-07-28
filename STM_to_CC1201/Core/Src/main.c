@@ -64,6 +64,294 @@ static void MX_SPI4_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// Function to decode and print CC1201 status
+void print_cc1201_status(uint8_t status_byte, const char* context) {
+    uint8_t radio_state = (status_byte >> 4) & 0x0F;
+    uint8_t fifo_bytes = status_byte & 0x0F;
+    
+    printf("  %s: Status=0x%02X, State=0x%X", context, status_byte, radio_state);
+    switch(radio_state) {
+        case 0x0: printf("(IDLE)"); break;
+        case 0x1: printf("(RX)"); break;
+        case 0x2: printf("(TX)"); break;
+        case 0x3: printf("(FSTXON)"); break;
+        case 0x4: printf("(CALIBRATE)"); break;
+        case 0x5: printf("(SETTLING)"); break;
+        case 0x6: printf("(RX_FIFO_ERR)"); break;
+        case 0x7: printf("(TX_FIFO_ERR)"); break;
+        default: printf("(UNKNOWN)"); break;
+    }
+    printf(", FIFO=%d\n\r", fifo_bytes);
+}
+
+// Test 1: Buffer Read/Write Operations
+void test_buffer_operations(void) {
+    printf("\n=== TEST 1: BUFFER READ/WRITE OPERATIONS ===\n\r");
+    
+    HAL_StatusTypeDef status;
+    uint8_t status_byte = 0;
+    
+    // First, ensure we're in IDLE state and flush FIFOs
+    printf("1. Preparing for buffer tests...\n\r");
+    status = CC1201_EnterIdleMode(&status_byte);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "IDLE_MODE");
+    }
+    
+    // Flush both FIFOs
+    CC1201_FlushTxFifo(&status_byte);
+    print_cc1201_status(status_byte, "FLUSH_TX");
+    CC1201_FlushRxFifo(&status_byte);
+    print_cc1201_status(status_byte, "FLUSH_RX");
+    
+    // Test TX FIFO write operations
+    printf("\n2. Testing TX FIFO Write Operations:\n\r");
+    
+    // Test pattern 1: Sequential bytes
+    uint8_t test_data_1[] = {0x01, 0x02, 0x03, 0x04, 0x05};
+    status = CC1201_WriteTxFifo(test_data_1, sizeof(test_data_1), &status_byte);
+    printf("  Write 5 bytes [01,02,03,04,05]: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "TX_WRITE");
+        
+        // Check TX FIFO count
+        uint8_t tx_count = 0;
+        CC1201_GetNumTXBytes(&tx_count);
+        printf("  TX FIFO count: %d bytes\n\r", tx_count);
+    }
+    
+    // Test single byte write
+    printf("\n3. Testing Single Byte Write:\n\r");
+    status = CC1201_WriteSingleTxFifo(0xAA, &status_byte);
+    printf("  Write single byte [AA]: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "SINGLE_WRITE");
+        
+        uint8_t tx_count = 0;
+        CC1201_GetNumTXBytes(&tx_count);
+        printf("  TX FIFO count after single write: %d bytes\n\r", tx_count);
+    }
+    
+    // Test RX FIFO read (should be empty)
+    printf("\n4. Testing RX FIFO Read (should be empty):\n\r");
+    uint8_t rx_buffer[10] = {0};
+    status = CC1201_ReadRxFifo(rx_buffer, 1, &status_byte);
+    printf("  Read 1 byte from RX FIFO: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "RX_READ");
+        printf("  Read data: 0x%02X\n\r", rx_buffer[0]);
+        
+        uint8_t rx_count = 0;
+        CC1201_GetNumRXBytes(&rx_count);
+        printf("  RX FIFO count: %d bytes\n\r", rx_count);
+    }
+    
+    // Clean up - flush TX FIFO
+    printf("\n5. Cleanup - Flushing TX FIFO:\n\r");
+    CC1201_FlushTxFifo(&status_byte);
+    print_cc1201_status(status_byte, "CLEANUP_FLUSH");
+    
+    uint8_t final_tx_count = 0;
+    CC1201_GetNumTXBytes(&final_tx_count);
+    printf("  Final TX FIFO count: %d bytes\n\r", final_tx_count);
+    
+    printf("=== BUFFER TEST COMPLETE ===\n\r");
+}
+
+// Test 2: State Change Operations
+void test_state_changes(void) {
+    printf("\n=== TEST 2: STATE CHANGE OPERATIONS ===\n\r");
+    
+    HAL_StatusTypeDef status;
+    uint8_t status_byte = 0;
+    uint8_t marc_state = 0;
+    
+    // Test 1: IDLE State
+    printf("1. Testing IDLE State:\n\r");
+    status = CC1201_EnterIdleMode(&status_byte);
+    printf("  Enter IDLE: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "IDLE");
+        CC1201_ReadMARCState(&marc_state);
+        printf("  MARC State: 0x%02X\n\r", marc_state);
+    }
+    HAL_Delay(50);
+    
+    // Test 2: RX State
+    printf("\n2. Testing RX State:\n\r");
+    status = CC1201_EnterRxMode(&status_byte);
+    printf("  Enter RX: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "RX");
+        HAL_Delay(100); // Stay in RX for a moment
+        CC1201_ReadMARCState(&marc_state);
+        printf("  MARC State after delay: 0x%02X\n\r", marc_state);
+    }
+    
+    // Test 3: Return to IDLE from RX
+    printf("\n3. Testing IDLE from RX:\n\r");
+    status = CC1201_EnterIdleMode(&status_byte);
+    printf("  RX->IDLE: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "RX_TO_IDLE");
+    }
+    HAL_Delay(50);
+    
+    // Test 4: TX State
+    printf("\n4. Testing TX State:\n\r");
+    status = CC1201_EnterTxMode(&status_byte);
+    printf("  Enter TX: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "TX");
+        HAL_Delay(50); // Brief TX state
+        CC1201_ReadMARCState(&marc_state);
+        printf("  MARC State in TX: 0x%02X\n\r", marc_state);
+    }
+    
+    // Test 5: Return to IDLE from TX
+    printf("\n5. Testing IDLE from TX:\n\r");
+    status = CC1201_EnterIdleMode(&status_byte);
+    printf("  TX->IDLE: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "TX_TO_IDLE");
+    }
+    
+    // Test 6: Fast TX On (FSTXON state)
+    printf("\n6. Testing Fast TX On (FSTXON):\n\r");
+    status = CC1201_FastTxOn(&status_byte);
+    printf("  Fast TX On: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "FSTXON");
+        CC1201_ReadMARCState(&marc_state);
+        printf("  MARC State in FSTXON: 0x%02X\n\r", marc_state);
+    }
+    
+    // Return to IDLE
+    printf("\n7. Final return to IDLE:\n\r");
+    status = CC1201_EnterIdleMode(&status_byte);
+    printf("  Final IDLE: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "FINAL_IDLE");
+    }
+    
+    printf("=== STATE CHANGE TEST COMPLETE ===\n\r");
+}
+
+// Test 3: Individual Function Tests
+void test_individual_functions(void) {
+    printf("\n=== TEST 3: INDIVIDUAL FUNCTION TESTS ===\n\r");
+    
+    HAL_StatusTypeDef status;
+    uint8_t data = 0;
+    uint8_t status_byte = 0;
+    
+    // Test CC1201_ReadStatus (using a safe register like IOCFG2)
+    printf("1. Testing CC1201_ReadStatus():\n\r");
+    status = CC1201_ReadStatus(0x01, &data); // IOCFG2 register
+    printf("  Read IOCFG2 (0x01): HAL=%d, Data=0x%02X\n\r", status, data);
+    if (status == HAL_OK) {
+        printf("  ✓ CC1201_ReadStatus() WORKING\n\r");
+    } else {
+        printf("  ✗ CC1201_ReadStatus() FAILED\n\r");
+    }
+    
+    // Test CC1201_WriteRegister and verify with read
+    printf("\n2. Testing CC1201_WriteRegister():\n\r");
+    uint8_t original_value = data; // Store original value
+    uint8_t test_value = 0x55; // Test pattern
+    
+    status = CC1201_WriteRegister(0x01, test_value);
+    printf("  Write IOCFG2 (0x55): HAL=%d\n\r", status);
+    
+    if (status == HAL_OK) {
+        // Read back to verify
+        status = CC1201_ReadStatus(0x01, &data);
+        printf("  Read back: HAL=%d, Data=0x%02X\n\r", status, data);
+        
+        if (status == HAL_OK && data == test_value) {
+            printf("  ✓ CC1201_WriteRegister() WORKING (Write/Read verified)\n\r");
+        } else {
+            printf("  ✗ CC1201_WriteRegister() FAILED (Data mismatch)\n\r");
+        }
+        
+        // Restore original value
+        CC1201_WriteRegister(0x01, original_value);
+        printf("  Restored original value: 0x%02X\n\r", original_value);
+    } else {
+        printf("  ✗ CC1201_WriteRegister() FAILED\n\r");
+    }
+    
+    // Test CC1201_SendStrobe (using NOP)
+    printf("\n3. Testing CC1201_SendStrobe():\n\r");
+    status = CC1201_SendStrobe(0x3D, &status_byte); // NOP strobe
+    printf("  Send NOP strobe: HAL=%d ", status);
+    if (status == HAL_OK) {
+        print_cc1201_status(status_byte, "STROBE_NOP");
+        printf("  ✓ CC1201_SendStrobe() WORKING\n\r");
+    } else {
+        printf("  ✗ CC1201_SendStrobe() FAILED\n\r");
+    }
+    
+    // Test CC1201_ReadMARCState
+    printf("\n4. Testing CC1201_ReadMARCState():\n\r");
+    uint8_t marc_state = 0;
+    status = CC1201_ReadMARCState(&marc_state);
+    printf("  Read MARC State: HAL=%d, State=0x%02X\n\r", status, marc_state);
+    if (status == HAL_OK) {
+        printf("  ✓ CC1201_ReadMARCState() WORKING\n\r");
+    } else {
+        printf("  ✗ CC1201_ReadMARCState() FAILED\n\r");
+    }
+    
+    // Test CC1201_GetNumRXBytes
+    printf("\n5. Testing CC1201_GetNumRXBytes():\n\r");
+    uint8_t rx_bytes = 0;
+    status = CC1201_GetNumRXBytes(&rx_bytes);
+    printf("  Get RX Bytes: HAL=%d, Count=%d\n\r", status, rx_bytes);
+    if (status == HAL_OK) {
+        printf("  ✓ CC1201_GetNumRXBytes() WORKING\n\r");
+    } else {
+        printf("  ✗ CC1201_GetNumRXBytes() FAILED\n\r");
+    }
+    
+    // Test CC1201_GetNumTXBytes
+    printf("\n6. Testing CC1201_GetNumTXBytes():\n\r");
+    uint8_t tx_bytes = 0;
+    status = CC1201_GetNumTXBytes(&tx_bytes);
+    printf("  Get TX Bytes: HAL=%d, Count=%d\n\r", status, tx_bytes);
+    if (status == HAL_OK) {
+        printf("  ✓ CC1201_GetNumTXBytes() WORKING\n\r");
+    } else {
+        printf("  ✗ CC1201_GetNumTXBytes() FAILED\n\r");
+    }
+    
+    printf("=== INDIVIDUAL FUNCTION TEST COMPLETE ===\n\r");
+}
+
+// Main test runner
+void run_comprehensive_cc1201_tests(void) {
+    printf("\n STARTING COMPREHENSIVE CC1201 TEST SUITE \n\r");
+    printf("================================================\n\r");
+    
+    // Run all tests
+    test_buffer_operations();
+    HAL_Delay(500);
+    
+    test_state_changes();
+    HAL_Delay(500);
+    
+    test_individual_functions();
+    HAL_Delay(500);
+    
+    printf("\n COMPREHENSIVE TEST SUITE COMPLETE! \n\r");
+    printf("=============================================\n\r");
+    
+    // Final status check
+    uint8_t final_status = 0;
+    CC1201_Nop(&final_status);
+    print_cc1201_status(final_status, "FINAL_STATUS");
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -144,6 +432,10 @@ int main(void)
       printf("Basic CC1201 communication working!\n\r");
       BSP_LED_Off(LED_RED);
       BSP_LED_On(LED_GREEN);
+      
+      // Run comprehensive tests
+      HAL_Delay(1000); // Give user time to see initial results
+      run_comprehensive_cc1201_tests();
   } else {
       printf("CC1201 communication failed!\n\r");
       BSP_LED_Off(LED_GREEN);
