@@ -84,6 +84,147 @@ void print_cc1201_status(uint8_t status_byte, const char* context) {
     printf(", FIFO=%d\n\r", fifo_bytes);
 }
 
+// CC1201 Power-up and Reset Sequence  
+void cc1201_power_up_sequence(void) {
+    printf("\n=== CC1201 POWER-UP SEQUENCE ===\n\r");
+    
+    // 1. Ensure CS is high (inactive)
+    printf("1. Setting CS HIGH (inactive)...\n\r");
+    HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
+    HAL_Delay(10);
+    
+    // 2. Power-up delay (let voltages stabilize)
+    printf("2. Power stabilization delay (100ms)...\n\r");
+    HAL_Delay(100);
+    
+    // 3. Crystal oscillator startup time
+    printf("3. Crystal oscillator startup delay (10ms)...\n\r");
+    HAL_Delay(10);
+    
+    // 4. Try software reset sequence
+    printf("4. Attempting software reset...\n\r");
+    uint8_t reset_status = 0xFF;
+    HAL_StatusTypeDef reset_result = CC1201_SoftReset(&reset_status);
+    printf("  Software reset: HAL=%d, Status=0x%02X\n\r", reset_result, reset_status);
+    
+    // 5. Wait for reset to complete
+    printf("5. Reset completion delay (50ms)...\n\r");
+    HAL_Delay(50);
+    
+    // 6. Test basic communication after reset
+    printf("6. Testing communication after reset...\n\r");
+    uint8_t post_reset_status = 0xFF;
+    HAL_StatusTypeDef post_reset_result = CC1201_Nop(&post_reset_status);
+    printf("  Post-reset NOP: HAL=%d, Status=0x%02X\n\r", post_reset_result, post_reset_status);
+    
+    if (post_reset_status != 0xFF && post_reset_status != 0x00) {
+        printf("  ✓ CC1201 responding after reset!\n\r");
+    } else {
+        printf("  ✗ CC1201 still not responding\n\r");
+    }
+    
+    printf("=== POWER-UP SEQUENCE COMPLETE ===\n\r");
+}
+
+// Comprehensive CC1201 Hardware Diagnostic
+void comprehensive_cc1201_diagnostic(void) {
+    printf("\n=== COMPREHENSIVE CC1201 HARDWARE DIAGNOSTIC ===\n\r");
+    
+    // 1. Check pin states BEFORE any SPI communication
+    printf("1. INITIAL PIN STATE CHECK:\n\r");
+    printf("  CS Pin (PE11): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_11) ? "HIGH" : "LOW");
+    printf("  SCK Pin (PE12): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_12) ? "HIGH" : "LOW");
+    printf("  MISO Pin (PE13): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
+    printf("  MOSI Pin (PE14): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_14) ? "HIGH" : "LOW");
+    printf("  INT Pin (PD5): %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_5) ? "HIGH" : "LOW");
+    
+    // 2. Manual CS control test
+    printf("\n2. MANUAL CS CONTROL TEST:\n\r");
+    printf("  Setting CS LOW...\n\r");
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_RESET);
+    HAL_Delay(10);
+    printf("  CS Pin: %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_11) ? "HIGH" : "LOW");
+    printf("  MISO Pin: %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
+    
+    printf("  Setting CS HIGH...\n\r");
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_SET);
+    HAL_Delay(10);
+    printf("  CS Pin: %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_11) ? "HIGH" : "LOW");
+    printf("  MISO Pin: %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
+    
+    // 3. Test different SPI byte patterns with CS control
+    printf("\n3. RAW SPI BYTE PATTERN TEST:\n\r");
+    uint8_t test_patterns[] = {0x00, 0xFF, 0x55, 0xAA, 0x3D}; // Last one is NOP command
+    const char* pattern_names[] = {"0x00", "0xFF", "0x55", "0xAA", "NOP(0x3D)"};
+    
+    for (int i = 0; i < 5; i++) {
+        uint8_t tx_data = test_patterns[i];
+        uint8_t rx_data = 0x00; // Initialize to 0 this time
+        
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_RESET); // CS LOW
+        HAL_Delay(1);
+        HAL_StatusTypeDef spi_status = HAL_SPI_TransmitReceive(&hspi4, &tx_data, &rx_data, 1, 1000);
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_SET);   // CS HIGH
+        
+        printf("  %s: TX=0x%02X -> RX=0x%02X (HAL=%d)\n\r", 
+               pattern_names[i], tx_data, rx_data, spi_status);
+        
+        if (rx_data == tx_data) {
+            printf("    ⚠ Echo detected - MISO may be shorted to MOSI\n\r");
+        } else if (rx_data == 0xFF) {
+            printf("    ⚠ MISO stuck HIGH - check power/connections\n\r");
+        } else if (rx_data == 0x00) {
+            printf("    ⚠ MISO stuck LOW - check power/connections\n\r");
+        } else {
+            printf("    ✓ Different response - potential communication\n\r");
+        }
+        HAL_Delay(10);
+    }
+    
+    // 4. Check for potential reset pin (not defined in current setup)
+    printf("\n4. RESET/POWER CONSIDERATIONS:\n\r");
+    printf("  ⚠ No RESET pin defined in current configuration\n\r");
+    printf("  ⚠ No power enable pin defined in current configuration\n\r");
+    printf("  → CC1201 may need external reset or power cycling\n\r");
+    printf("  → Check if CC1201 has separate VDD supply\n\r");
+    printf("  → Verify CC1201 crystal oscillator is working\n\r");
+    
+    // 5. Try different SPI clock speeds
+    printf("\n5. SPI CLOCK SPEED TEST:\n\r");
+    printf("  Current SPI prescaler: %lu\n\r", (unsigned long)hspi4.Init.BaudRatePrescaler);
+    
+    // Test with slower clock
+    printf("  Testing with slower clock (prescaler 32)...\n\r");
+    hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+    if (HAL_SPI_Init(&hspi4) == HAL_OK) {
+        uint8_t tx_slow = 0x3D, rx_slow = 0;
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_RESET);
+        HAL_Delay(1);
+        HAL_StatusTypeDef slow_status = HAL_SPI_TransmitReceive(&hspi4, &tx_slow, &rx_slow, 1, 1000);
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_SET);
+        printf("    Slow NOP: TX=0x%02X -> RX=0x%02X (HAL=%d)\n\r", tx_slow, rx_slow, slow_status);
+        
+        // Restore original speed
+        hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+        HAL_SPI_Init(&hspi4);
+    }
+    
+    // 6. Final pin state check
+    printf("\n6. FINAL PIN STATE CHECK:\n\r");
+    printf("  CS Pin (PE11): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_11) ? "HIGH" : "LOW");
+    printf("  MISO Pin (PE13): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
+    printf("  INT Pin (PD5): %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_5) ? "HIGH" : "LOW");
+    
+    printf("=== HARDWARE DIAGNOSTIC COMPLETE ===\n\r");
+    printf("\nRECOMMENDATIONS:\n\r");
+    printf("→ If MISO is stuck HIGH: Check CC1201 power supply\n\r");
+    printf("→ If MISO is stuck LOW: Check ground connections\n\r");
+    printf("→ If echoing MOSI: Check for short circuits\n\r");
+    printf("→ Consider adding hardware reset pin control\n\r");
+    printf("→ Verify CC1201 crystal oscillator is populated and working\n\r");
+    printf("→ Check CC1201 datasheet for proper power-up sequence\n\r");
+}
+
 // Test 1: Buffer Read/Write Operations
 void test_buffer_operations(void) {
     printf("\n=== TEST 1: BUFFER READ/WRITE OPERATIONS ===\n\r");
@@ -432,14 +573,27 @@ int main(void)
       printf("Basic CC1201 communication working!\n\r");
       BSP_LED_Off(LED_RED);
       BSP_LED_On(LED_GREEN);
-      
-      // Run comprehensive tests
-      HAL_Delay(1000); // Give user time to see initial results
-      run_comprehensive_cc1201_tests();
   } else {
       printf("CC1201 communication failed!\n\r");
       BSP_LED_Off(LED_GREEN);
       BSP_LED_On(LED_RED);
+  }
+  
+  // Try proper power-up sequence first
+  HAL_Delay(1000);
+  cc1201_power_up_sequence();
+  
+  // Run comprehensive hardware diagnostic
+  HAL_Delay(500);
+  comprehensive_cc1201_diagnostic();
+  
+  // Only run functional tests if basic communication works
+  if (nop_result == HAL_OK && test_status != 0xFF) {
+      HAL_Delay(1000);
+      run_comprehensive_cc1201_tests();
+  } else {
+      printf("\nSkipping functional tests due to communication issues.\n\r");
+      printf("Please resolve hardware issues first.\n\r");
   }
 
   /* USER CODE END BSP */
