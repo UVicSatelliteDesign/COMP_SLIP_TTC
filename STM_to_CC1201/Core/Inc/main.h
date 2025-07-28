@@ -58,7 +58,9 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 // External variable declarations
-extern SPI_HandleTypeDef hspi2;
+extern __IO uint32_t BspButtonState;
+
+extern SPI_HandleTypeDef hspi4;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -69,7 +71,7 @@ extern SPI_HandleTypeDef hspi2;
 
 /* USER CODE BEGIN Private defines */
 // CC1201 SPI and GPIO pin definitions
-#define CC1201_SPI_HANDLE hspi2
+#define CC1201_SPI_HANDLE hspi4
 #define CC1201_CS_PORT GPIOE
 #define CC1201_CS_PIN GPIO_PIN_4
 #define CC1201_INT_PORT GPIOD

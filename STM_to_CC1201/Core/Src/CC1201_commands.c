@@ -246,7 +246,7 @@ HAL_StatusTypeDef CC1201_WriteTxFifo(uint8_t *data, uint8_t length, uint8_t *sta
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET);
     
     // Perform SPI transaction
-    status = HAL_SPI_TransmitReceive(&hspi2, tx_buffer, rx_buffer, length + 1, HAL_MAX_DELAY);
+    status = HAL_SPI_TransmitReceive(&hspi4, tx_buffer, rx_buffer, length + 1, HAL_MAX_DELAY);
     
     // Pull CS high to end SPI transaction
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
@@ -287,7 +287,7 @@ HAL_StatusTypeDef CC1201_ReadRxFifo(uint8_t *data, uint8_t length, uint8_t *stat
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET);
     
     // Perform SPI transaction
-    status = HAL_SPI_TransmitReceive(&hspi2, tx_buffer, rx_buffer, length + 1, HAL_MAX_DELAY);
+    status = HAL_SPI_TransmitReceive(&hspi4, tx_buffer, rx_buffer, length + 1, HAL_MAX_DELAY);
     
     // Pull CS high to end SPI transaction
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);

@@ -16,7 +16,7 @@ void Test_Alternative_SPI2_Pins(void) {
     uint8_t rx_data = 0x00;
     
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET); // CS LOW
-    HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(&hspi2, &tx_data, &rx_data, 1, 1000);
+    HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(&hspi4, &tx_data, &rx_data, 1, 1000);
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);   // CS HIGH
     
     printf("    Current PA6: TX=0x%02X -> RX=0x%02X, HAL=%d\n\r", tx_data, rx_data, status);
@@ -25,7 +25,7 @@ void Test_Alternative_SPI2_Pins(void) {
     printf("\n2. Testing PC2 as SPI2_MISO...\n\r");
     
     // Disable SPI2 first
-    __HAL_SPI_DISABLE(&hspi2);
+    __HAL_SPI_DISABLE(&hspi4);
     
     // Reconfigure PA6 back to analog to disconnect it
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -45,12 +45,12 @@ void Test_Alternative_SPI2_Pins(void) {
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
     
     // Re-enable SPI2
-    __HAL_SPI_ENABLE(&hspi2);
+    __HAL_SPI_ENABLE(&hspi4);
     
     // Test with PC2
     rx_data = 0x00;
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET); // CS LOW
-    status = HAL_SPI_TransmitReceive(&hspi2, &tx_data, &rx_data, 1, 1000);
+    status = HAL_SPI_TransmitReceive(&hspi4, &tx_data, &rx_data, 1, 1000);
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);   // CS HIGH
     
     printf("    PC2 test: TX=0x%02X -> RX=0x%02X, HAL=%d\n\r", tx_data, rx_data, status);
@@ -64,7 +64,7 @@ void Test_Alternative_SPI2_Pins(void) {
     printf("\n3. Testing PB14 as SPI2_MISO...\n\r");
     
     // Disable SPI2
-    __HAL_SPI_DISABLE(&hspi2);
+    __HAL_SPI_DISABLE(&hspi4);
     
     // Disconnect PC2
     GPIO_InitStruct.Pin = GPIO_PIN_2;
@@ -80,12 +80,12 @@ void Test_Alternative_SPI2_Pins(void) {
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     
     // Re-enable SPI2
-    __HAL_SPI_ENABLE(&hspi2);
+    __HAL_SPI_ENABLE(&hspi4);
     
     // Test with PB14
     rx_data = 0x00;
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET); // CS LOW
-    status = HAL_SPI_TransmitReceive(&hspi2, &tx_data, &rx_data, 1, 1000);
+    status = HAL_SPI_TransmitReceive(&hspi4, &tx_data, &rx_data, 1, 1000);
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);   // CS HIGH
     
     printf("    PB14 test: TX=0x%02X -> RX=0x%02X, HAL=%d\n\r", tx_data, rx_data, status);
@@ -106,7 +106,7 @@ void Test_Alternative_SPI2_Pins(void) {
     
     for (int i = 0; i < 7; i++) {
         // Disable SPI2
-        __HAL_SPI_DISABLE(&hspi2);
+        __HAL_SPI_DISABLE(&hspi4);
         
         // Disconnect previous pin
         GPIO_InitStruct.Pin = GPIO_PIN_14;
@@ -122,12 +122,12 @@ void Test_Alternative_SPI2_Pins(void) {
         HAL_GPIO_Init(test_ports[i], &GPIO_InitStruct);
         
         // Re-enable SPI2
-        __HAL_SPI_ENABLE(&hspi2);
+        __HAL_SPI_ENABLE(&hspi4);
         
         // Test
         rx_data = 0x00;
         HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
-        status = HAL_SPI_TransmitReceive(&hspi2, &tx_data, &rx_data, 1, 1000);
+        status = HAL_SPI_TransmitReceive(&hspi4, &tx_data, &rx_data, 1, 1000);
         HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
         
         printf("   %s: TX=0x%02X -> RX=0x%02X", pin_names[i], tx_data, rx_data);
@@ -142,7 +142,7 @@ void Test_Alternative_SPI2_Pins(void) {
     
     // If we get here, restore original PA6 configuration
     printf("\n5. RESTORING ORIGINAL PA6 CONFIGURATION...\n\r");
-    __HAL_SPI_DISABLE(&hspi2);
+    __HAL_SPI_DISABLE(&hspi4);
     
     // Restore PA6 as MISO
     GPIO_InitStruct.Pin = GPIO_PIN_6;
@@ -152,7 +152,7 @@ void Test_Alternative_SPI2_Pins(void) {
     GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
     
-    __HAL_SPI_ENABLE(&hspi2);
+    __HAL_SPI_ENABLE(&hspi4);
     
     printf("=== ALTERNATIVE PIN TEST COMPLETE ===\n\r");
     printf("CONCLUSION: No working MISO pin found. Possible issues:\n\r");
