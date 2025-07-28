@@ -84,6 +84,21 @@ void print_cc1201_status(uint8_t status_byte, const char* context) {
     printf(", FIFO=%d\n\r", fifo_bytes);
 }
 
+// Hardware Reset Function
+void cc1201_hardware_reset(void) {
+    printf("  Performing hardware reset...\n\r");
+    
+    // Pull reset pin LOW (active reset)
+    HAL_GPIO_WritePin(CC1201_RESET_PORT, CC1201_RESET_PIN, GPIO_PIN_RESET);
+    HAL_Delay(10); // Hold reset for 10ms
+    
+    // Release reset pin HIGH (inactive)
+    HAL_GPIO_WritePin(CC1201_RESET_PORT, CC1201_RESET_PIN, GPIO_PIN_SET);
+    HAL_Delay(50); // Wait for reset to complete
+    
+    printf("  Hardware reset complete\n\r");
+}
+
 // CC1201 Power-up and Reset Sequence  
 void cc1201_power_up_sequence(void) {
     printf("\n=== CC1201 POWER-UP SEQUENCE ===\n\r");
@@ -93,34 +108,47 @@ void cc1201_power_up_sequence(void) {
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET);
     HAL_Delay(10);
     
-    // 2. Power-up delay (let voltages stabilize)
-    printf("2. Power stabilization delay (100ms)...\n\r");
+    // 2. Hardware reset sequence
+    printf("2. Hardware reset sequence...\n\r");
+    cc1201_hardware_reset();
+    
+    // 3. Power-up delay (let voltages stabilize)
+    printf("3. Power stabilization delay (100ms)...\n\r");
     HAL_Delay(100);
     
-    // 3. Crystal oscillator startup time
-    printf("3. Crystal oscillator startup delay (10ms)...\n\r");
+    // 4. Crystal oscillator startup time
+    printf("4. Crystal oscillator startup delay (10ms)...\n\r");
     HAL_Delay(10);
     
-    // 4. Try software reset sequence
-    printf("4. Attempting software reset...\n\r");
-    uint8_t reset_status = 0xFF;
-    HAL_StatusTypeDef reset_result = CC1201_SoftReset(&reset_status);
-    printf("  Software reset: HAL=%d, Status=0x%02X\n\r", reset_result, reset_status);
+    // 5. Test basic communication after hardware reset
+    printf("5. Testing communication after hardware reset...\n\r");
+    uint8_t post_hw_reset_status = 0xFF;
+    HAL_StatusTypeDef post_hw_reset_result = CC1201_Nop(&post_hw_reset_status);
+    printf("  Post-HW-reset NOP: HAL=%d, Status=0x%02X\n\r", post_hw_reset_result, post_hw_reset_status);
     
-    // 5. Wait for reset to complete
-    printf("5. Reset completion delay (50ms)...\n\r");
-    HAL_Delay(50);
-    
-    // 6. Test basic communication after reset
-    printf("6. Testing communication after reset...\n\r");
-    uint8_t post_reset_status = 0xFF;
-    HAL_StatusTypeDef post_reset_result = CC1201_Nop(&post_reset_status);
-    printf("  Post-reset NOP: HAL=%d, Status=0x%02X\n\r", post_reset_result, post_reset_status);
-    
-    if (post_reset_status != 0xFF && post_reset_status != 0x00) {
-        printf("  ✓ CC1201 responding after reset!\n\r");
+    // 6. Try software reset sequence (if hardware reset helped)
+    if (post_hw_reset_status != 0xFF) {
+        printf("6. Attempting software reset...\n\r");
+        uint8_t reset_status = 0xFF;
+        HAL_StatusTypeDef reset_result = CC1201_SoftReset(&reset_status);
+        printf("  Software reset: HAL=%d, Status=0x%02X\n\r", reset_result, reset_status);
+        
+        // Wait for reset to complete
+        HAL_Delay(50);
+        
+        // Test again after software reset
+        uint8_t post_reset_status = 0xFF;
+        HAL_StatusTypeDef post_reset_result = CC1201_Nop(&post_reset_status);
+        printf("  Post-SW-reset NOP: HAL=%d, Status=0x%02X\n\r", post_reset_result, post_reset_status);
+        
+        if (post_reset_status != 0xFF && post_reset_status != 0x00) {
+            printf("  ✓ CC1201 responding after complete reset sequence!\n\r");
+        } else {
+            printf("  ✗ CC1201 still not responding after software reset\n\r");
+        }
     } else {
-        printf("  ✗ CC1201 still not responding\n\r");
+        printf("6. Skipping software reset - hardware reset didn't help\n\r");
+        printf("  ✗ CC1201 not responding - likely hardware issue\n\r");
     }
     
     printf("=== POWER-UP SEQUENCE COMPLETE ===\n\r");
@@ -136,6 +164,7 @@ void comprehensive_cc1201_diagnostic(void) {
     printf("  SCK Pin (PE12): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_12) ? "HIGH" : "LOW");
     printf("  MISO Pin (PE13): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
     printf("  MOSI Pin (PE14): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_14) ? "HIGH" : "LOW");
+    printf("  RESET Pin (PD4): %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_4) ? "HIGH" : "LOW");
     printf("  INT Pin (PD5): %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_5) ? "HIGH" : "LOW");
     
     // 2. Manual CS control test
@@ -181,16 +210,41 @@ void comprehensive_cc1201_diagnostic(void) {
         HAL_Delay(10);
     }
     
-    // 4. Check for potential reset pin (not defined in current setup)
-    printf("\n4. RESET/POWER CONSIDERATIONS:\n\r");
-    printf("  ⚠ No RESET pin defined in current configuration\n\r");
+    // 4. Hardware reset test
+    printf("\n4. HARDWARE RESET TEST:\n\r");
+    printf("  ✓ Hardware RESET pin configured on PD4\n\r");
+    printf("  Testing hardware reset sequence...\n\r");
+    
+    // Test reset pin control
+    printf("  Current RESET pin state: %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_4) ? "HIGH" : "LOW");
+    printf("  Performing reset pulse...\n\r");
+    
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET); // Assert reset
+    HAL_Delay(10);
+    printf("  RESET pin during reset: %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_4) ? "HIGH" : "LOW");
+    printf("  MISO pin during reset: %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
+    
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_SET);   // Release reset
+    HAL_Delay(50);
+    printf("  RESET pin after reset: %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_4) ? "HIGH" : "LOW");
+    printf("  MISO pin after reset: %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
+    
+    // Test communication after reset
+    uint8_t reset_test_tx = 0x3D, reset_test_rx = 0x00;
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_StatusTypeDef reset_comm_status = HAL_SPI_TransmitReceive(&hspi4, &reset_test_tx, &reset_test_rx, 1, 1000);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_SET);
+    printf("  Post-reset communication: TX=0x%02X -> RX=0x%02X (HAL=%d)\n\r", 
+           reset_test_tx, reset_test_rx, reset_comm_status);
+    
+    printf("\n5. POWER CONSIDERATIONS:\n\r");
     printf("  ⚠ No power enable pin defined in current configuration\n\r");
-    printf("  → CC1201 may need external reset or power cycling\n\r");
     printf("  → Check if CC1201 has separate VDD supply\n\r");
     printf("  → Verify CC1201 crystal oscillator is working\n\r");
     
-    // 5. Try different SPI clock speeds
-    printf("\n5. SPI CLOCK SPEED TEST:\n\r");
+    // 6. Try different SPI clock speeds
+    printf("\n6. SPI CLOCK SPEED TEST:\n\r");
     printf("  Current SPI prescaler: %lu\n\r", (unsigned long)hspi4.Init.BaudRatePrescaler);
     
     // Test with slower clock
@@ -209,8 +263,8 @@ void comprehensive_cc1201_diagnostic(void) {
         HAL_SPI_Init(&hspi4);
     }
     
-    // 6. Final pin state check
-    printf("\n6. FINAL PIN STATE CHECK:\n\r");
+    // 7. Final pin state check
+    printf("\n7. FINAL PIN STATE CHECK:\n\r");
     printf("  CS Pin (PE11): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_11) ? "HIGH" : "LOW");
     printf("  MISO Pin (PE13): %s\n\r", HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_13) ? "HIGH" : "LOW");
     printf("  INT Pin (PD5): %s\n\r", HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_5) ? "HIGH" : "LOW");
@@ -724,11 +778,21 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
-  /*Configure GPIO pin : PD5 */
+  /*Configure GPIO pin : PD5 (CC1201 Interrupt) */
   GPIO_InitStruct.Pin = GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PD4 (CC1201 Reset) */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  
+  // Set reset pin HIGH (inactive) by default
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_SET);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

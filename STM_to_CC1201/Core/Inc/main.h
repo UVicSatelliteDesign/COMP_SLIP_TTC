@@ -77,6 +77,8 @@ extern SPI_HandleTypeDef hspi4;
 #define CC1201_INT_PORT GPIOD
 #define CC1201_INT_PIN  GPIO_PIN_5  // Changed to match GPIO init in main.c
 #define CC1201_INT_EXTI_IRQn EXTI9_5_IRQn  // Updated for PD5
+#define CC1201_RESET_PORT GPIOD
+#define CC1201_RESET_PIN GPIO_PIN_4  // Add hardware reset pin
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
