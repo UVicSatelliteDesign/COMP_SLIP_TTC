@@ -136,7 +136,8 @@ HAL_StatusTypeDef CC1201_ReadStatus(uint16_t reg_addr, uint8_t *read_data)
     }
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
-    for (volatile uint32_t i = 0; i < 200; ++i) { __NOP(); }
+    volatile uint32_t spin;
+    for (spin = 0; spin < 200; ++spin) { __NOP(); }
 
     status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, tx_buffer, rx_buffer, buffer_size, 1000);
 
@@ -181,7 +182,8 @@ HAL_StatusTypeDef CC1201_WriteRegister(uint16_t reg_addr, uint8_t write_data)
     }
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
-    for (volatile uint32_t i = 0; i < 200; ++i) { __NOP(); }
+    volatile uint32_t spin = 0;
+    for (spin = 0; spin < 200; ++spin) { __NOP(); }
 
     status = HAL_SPI_Transmit(&CC1201_SPI_HANDLE, tx_buffer, buffer_size, 250);
 

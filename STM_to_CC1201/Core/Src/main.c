@@ -367,7 +367,9 @@ void test_state_changes(void) {
     status = CC1201_CalFreqSynth(&status_byte);
     printf("  SCAL only: HAL=%d ", status);
     if (status == HAL_OK) { print_cc1201_status(status_byte, "SCAL"); }
-    HAL_Delay(10);
+    // Avoid HAL_Delay here in case SysTick is impacted; use a small busy wait
+    for (volatile uint32_t d = 0; d < 50000; ++d) { __NOP(); }
+    printf("Proceeding to IDLE test...\n\r");
     
     // Test 1: IDLE State
     printf("1. Testing IDLE State:\n\r");
@@ -378,7 +380,8 @@ void test_state_changes(void) {
         CC1201_ReadMARCState(&marc_state);
         printf("  MARC State: 0x%02X\n\r", marc_state);
     }
-    HAL_Delay(50);
+    // Small pause without HAL_Delay
+    for (volatile uint32_t d = 0; d < 50000; ++d) { __NOP(); }
     
     // Test 2: RX State
     printf("\n2. Testing RX State:\n\r");
@@ -386,7 +389,7 @@ void test_state_changes(void) {
     printf("  Enter RX: HAL=%d ", status);
     if (status == HAL_OK) {
         print_cc1201_status(status_byte, "RX");
-        HAL_Delay(100); // Stay in RX for a moment
+        for (volatile uint32_t d = 0; d < 200000; ++d) { __NOP(); }
         CC1201_ReadMARCState(&marc_state);
         printf("  MARC State after delay: 0x%02X\n\r", marc_state);
     }
@@ -398,7 +401,7 @@ void test_state_changes(void) {
     if (status == HAL_OK) {
         print_cc1201_status(status_byte, "RX_TO_IDLE");
     }
-    HAL_Delay(50);
+    for (volatile uint32_t d = 0; d < 50000; ++d) { __NOP(); }
     
     // Test 4: TX State
     printf("\n4. Testing TX State:\n\r");
@@ -409,7 +412,7 @@ void test_state_changes(void) {
     printf("  Enter TX: HAL=%d ", status);
     if (status == HAL_OK) {
         print_cc1201_status(status_byte, "TX");
-        HAL_Delay(50); // Brief TX state
+        for (volatile uint32_t d = 0; d < 50000; ++d) { __NOP(); }
         CC1201_ReadMARCState(&marc_state);
         printf("  MARC State in TX: 0x%02X\n\r", marc_state);
     }

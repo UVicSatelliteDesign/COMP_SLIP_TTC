@@ -87,7 +87,8 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
     
     // Small CS setup delay without relying on SysTick (avoid HAL_Delay hang if tick not running)
-    for (volatile uint32_t i = 0; i < 300; ++i) {
+    volatile uint32_t i;
+    for (i = 0; i < 300; ++i) {
         __NOP();
     }
 
