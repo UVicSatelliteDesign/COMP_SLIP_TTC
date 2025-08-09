@@ -648,23 +648,30 @@ int main(void)
       BSP_LED_Off(LED_GREEN);
       BSP_LED_On(LED_RED);
   }
-  
-  // Try proper power-up sequence first
-  HAL_Delay(1000);
-  cc1201_power_up_sequence();
-  
-  // Run comprehensive hardware diagnostic
-  HAL_Delay(500);
-  comprehensive_cc1201_diagnostic();
-  
-  // Run functional tests when SPI comms respond (even if initial status byte is 0xFF)
-  if (nop_result == HAL_OK) {
-      HAL_Delay(1000);
-      run_comprehensive_cc1201_tests();
-  } else {
-      printf("\nSkipping functional tests due to communication issues.\n\r");
-      printf("Please resolve hardware issues first.\n\r");
-  }
+
+  // Quick path: run state changes test immediately
+  printf("\n=== RUNNING QUICK STATE TESTS ===\n\r");
+  test_state_changes();
+
+  // Optionally skip longer diagnostics for now
+  // #if 0
+  // // Try proper power-up sequence first
+  // HAL_Delay(1000);
+  // cc1201_power_up_sequence();
+  // 
+  // // Run comprehensive hardware diagnostic
+  // HAL_Delay(500);
+  // comprehensive_cc1201_diagnostic();
+  // 
+  // // Run functional tests when SPI comms respond (even if initial status byte is 0xFF)
+  // if (nop_result == HAL_OK) {
+  //     HAL_Delay(1000);
+  //     run_comprehensive_cc1201_tests();
+  // } else {
+  //     printf("\nSkipping functional tests due to communication issues.\n\r");
+  //     printf("Please resolve hardware issues first.\n\r");
+  // }
+  // #endif
 
   /* USER CODE END BSP */
     /* Infinite loop */
