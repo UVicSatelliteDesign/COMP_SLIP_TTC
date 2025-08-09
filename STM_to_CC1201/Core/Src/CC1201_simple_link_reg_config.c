@@ -93,7 +93,7 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
 
     // Perform SPI transaction
     printf("[DEBUG] About to SPI strobe 0x%02X (SPI state=%d)\n\r", strobe_command, (int)HAL_SPI_GetState(&CC1201_SPI_HANDLE));
-    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, 5);
+    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, 1000);
     printf("[DEBUG] CC1201_SendStrobe 0x%02X -> HAL=%d, statusByte=0x%02X\n\r", strobe_command, status, rx_data);
     
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
