@@ -1,4 +1,7 @@
 #include "main.h"
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_gpio.h"
+#include "stm32h7xx_hal_spi.h"
 #include "CC1201_reg.h" // Include main.h to access SPI handle and CS pin definitions
 
 static const registerSetting_t preferredSettings[]=
@@ -77,6 +80,7 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
 
     // Perform SPI transaction
     status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, 1000);
+    printf("[DEBUG] CC1201_SendStrobe 0x%02X -> HAL=%d, statusByte=0x%02X\n\r", strobe_command, status, rx_data);
     
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
     

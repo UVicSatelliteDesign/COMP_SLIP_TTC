@@ -1,4 +1,4 @@
-../Core/Src/CC1201_simple_link_reg_config.c:68:19:CC1201_SendStrobe	3
-../Core/Src/CC1201_simple_link_reg_config.c:98:19:CC1201_WriteRegisterConfig	3
-../Core/Src/CC1201_simple_link_reg_config.c:120:10:CC1201_GetNumPreferredSettings	1
-../Core/Src/CC1201_simple_link_reg_config.c:130:26:CC1201_GetPreferredSettings	1
+../Core/Src/CC1201_simple_link_reg_config.c:71:19:CC1201_SendStrobe	3
+../Core/Src/CC1201_simple_link_reg_config.c:102:19:CC1201_WriteRegisterConfig	3
+../Core/Src/CC1201_simple_link_reg_config.c:124:10:CC1201_GetNumPreferredSettings	1
+../Core/Src/CC1201_simple_link_reg_config.c:134:26:CC1201_GetPreferredSettings	1
