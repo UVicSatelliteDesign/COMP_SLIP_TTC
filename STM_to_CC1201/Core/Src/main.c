@@ -361,6 +361,19 @@ void test_state_changes(void) {
     uint8_t status_byte = 0;
     uint8_t marc_state = 0;
     
+    // Apply preferred radio configuration and calibrate PLL before state changes
+    printf("Applying radio configuration...\n\r");
+    const registerSetting_t* settings = CC1201_GetPreferredSettings();
+    uint16_t num = CC1201_GetNumPreferredSettings();
+    status = CC1201_WriteRegisterConfig(settings, num);
+    printf("  Config write: HAL=%d\n\r", status);
+    
+    printf("Calibrating frequency synthesizer (SCAL)...\n\r");
+    status = CC1201_CalFreqSynth(&status_byte);
+    printf("  SCAL strobe: HAL=%d ", status);
+    if (status == HAL_OK) { print_cc1201_status(status_byte, "SCAL"); }
+    HAL_Delay(10);
+    
     // Test 1: IDLE State
     printf("1. Testing IDLE State:\n\r");
     status = CC1201_EnterIdleMode(&status_byte);
@@ -394,6 +407,9 @@ void test_state_changes(void) {
     
     // Test 4: TX State
     printf("\n4. Testing TX State:\n\r");
+    // Ensure at least one byte is present in TX FIFO to avoid immediate underflow
+    CC1201_WriteSingleTxFifo(0xAA, &status_byte);
+    print_cc1201_status(status_byte, "TX_FIFO_PRIME");
     status = CC1201_EnterTxMode(&status_byte);
     printf("  Enter TX: HAL=%d ", status);
     if (status == HAL_OK) {
@@ -641,8 +657,8 @@ int main(void)
   HAL_Delay(500);
   comprehensive_cc1201_diagnostic();
   
-  // Only run functional tests if basic communication works
-  if (nop_result == HAL_OK && test_status != 0xFF) {
+  // Run functional tests when SPI comms respond (even if initial status byte is 0xFF)
+  if (nop_result == HAL_OK) {
       HAL_Delay(1000);
       run_comprehensive_cc1201_tests();
   } else {
