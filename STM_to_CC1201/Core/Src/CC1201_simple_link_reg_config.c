@@ -73,14 +73,27 @@ HAL_StatusTypeDef CC1201_SendStrobe(uint8_t strobe_command, uint8_t *status_byte
     HAL_StatusTypeDef status;
     uint8_t rx_data;
 
+    // Early readiness check to avoid blocking if SPI not initialized yet
+    HAL_SPI_StateTypeDef spi_state = HAL_SPI_GetState(&CC1201_SPI_HANDLE);
+    printf("[DEBUG] Enter CC1201_SendStrobe cmd=0x%02X, SPI state=%d\n\r", strobe_command, (int)spi_state);
+    if (spi_state != HAL_SPI_STATE_READY) {
+        printf("[DEBUG] SPI not ready, skipping strobe\n\r");
+        if (status_byte) { *status_byte = 0x00; }
+        return HAL_ERROR;
+    }
+
+    // Ensure SPI is ready and CS is toggled with brief gaps
+    printf("[DEBUG] SPI state before CS low: %d\n\r", (int)HAL_SPI_GetState(&CC1201_SPI_HANDLE));
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
     
-    // Small delay to ensure CS is stable
-    HAL_Delay(1);
+    // Small CS setup delay without relying on SysTick (avoid HAL_Delay hang if tick not running)
+    for (volatile uint32_t i = 0; i < 300; ++i) {
+        __NOP();
+    }
 
     // Perform SPI transaction
-    printf("[DEBUG] About to SPI strobe 0x%02X\n\r", strobe_command);
-    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, 1000);
+    printf("[DEBUG] About to SPI strobe 0x%02X (SPI state=%d)\n\r", strobe_command, (int)HAL_SPI_GetState(&CC1201_SPI_HANDLE));
+    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, &strobe_command, &rx_data, 1, 5);
     printf("[DEBUG] CC1201_SendStrobe 0x%02X -> HAL=%d, statusByte=0x%02X\n\r", strobe_command, status, rx_data);
     
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
