@@ -34,6 +34,8 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "CC1201_commands.h"
+#include "CC1201_simple_link_reg_config.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -55,7 +57,10 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+// External variable declarations
+extern __IO uint32_t BspButtonState;
 
+extern SPI_HandleTypeDef hspi4;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -65,12 +70,15 @@ void Error_Handler(void);
 #define JTCK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-#define CC1201_SPI_HANDLE hspi1
-#define CC1201_CS_PORT GPIOB
-#define CC1201_CS_PIN GPIO_PIN_6
-#define CC1201_INT_PORT GPIOB
-#define CC1201_INT_PIN  GPIO_PIN_0
-#define CC1201_INT_EXTI_IRQn EXTI0_IRQn
+// CC1201 SPI and GPIO pin definitions
+#define CC1201_SPI_HANDLE hspi4
+#define CC1201_CS_PORT GPIOE
+#define CC1201_CS_PIN GPIO_PIN_11  // Changed to match SPI4 NSS pin and CC1201_commands.h
+#define CC1201_INT_PORT GPIOD
+#define CC1201_INT_PIN  GPIO_PIN_5  // Changed to match GPIO init in main.c
+#define CC1201_INT_EXTI_IRQn EXTI9_5_IRQn  // Updated for PD5
+#define CC1201_RESET_PORT GPIOD
+#define CC1201_RESET_PIN GPIO_PIN_4  // Add hardware reset pin
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

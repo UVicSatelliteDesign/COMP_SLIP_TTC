@@ -1,0 +1,61 @@
+#ifndef CC1201_REG_H
+#define CC1201_REG_H
+
+// Configuration Registers
+#define CC1201_IOCFG2            0x0001
+#define CC1201_SYNC3             0x0003
+#define CC1201_SYNC2             0x0004
+#define CC1201_SYNC1             0x0005
+#define CC1201_SYNC0             0x0006
+#define CC1201_SYNC_CFG1         0x0007
+#define CC1201_SYNC_CFG0         0x0008
+#define CC1201_DEVIATION_M       0x0009
+#define CC1201_MODCFG_DEV_E      0x000A
+#define CC1201_DCFILT_CFG        0x000B
+#define CC1201_PREAMBLE_CFG0     0x000D
+#define CC1201_IQIC              0x000E
+#define CC1201_CHAN_BW           0x000F
+#define CC1201_MDMCFG1           0x0010
+#define CC1201_MDMCFG0           0x0011
+#define CC1201_SYMBOL_RATE2      0x0012
+#define CC1201_SYMBOL_RATE1      0x0013
+#define CC1201_SYMBOL_RATE0      0x0014
+#define CC1201_AGC_REF           0x0015
+#define CC1201_AGC_CS_THR        0x0016
+#define CC1201_AGC_CFG1          0x0018
+#define CC1201_AGC_CFG0          0x0019
+#define CC1201_FIFO_CFG          0x001A
+#define CC1201_FS_CFG            0x001D
+#define CC1201_PKT_CFG2          0x001F
+#define CC1201_PKT_CFG0          0x0021
+#define CC1201_PKT_LEN           0x0025
+#define CC1201_IF_MIX_CFG        0x0026
+#define CC1201_TOC_CFG           0x0028
+#define CC1201_MDMCFG2           0x2F0C
+#define CC1201_FREQ2             0x2F0D
+#define CC1201_FREQ1             0x2F0E
+#define CC1201_FREQ0             0x2F0F
+#define CC1201_IF_ADC1           0x2F11
+#define CC1201_IF_ADC0           0x2F12
+#define CC1201_FS_DIG1           0x2F13
+#define CC1201_FS_DIG0           0x2F14
+#define CC1201_FS_CAL1           0x2F16
+#define CC1201_FS_CAL0           0x2F17
+#define CC1201_FS_DIVTWO         0x2F19
+#define CC1201_FS_DSM0           0x2F1B
+#define CC1201_FS_DVC0           0x2F1D
+#define CC1201_FS_PFD            0x2F1F
+#define CC1201_FS_PRE            0x2F20
+#define CC1201_FS_REG_DIV_CML    0x2F21
+#define CC1201_FS_SPARE          0x2F22
+#define CC1201_FS_VCO0           0x2F24
+#define CC1201_IFAMP             0x2F2E
+#define CC1201_XOSC5             0x2F32
+#define CC1201_XOSC1             0x2F36
+
+// Status Registers
+#define CC1201_MARCSTATE         0x2F73
+#define CC1201_NUM_RXBYTES       0x2F7A
+#define CC1201_NUM_TXBYTES       0x2F7B
+
+#endif // CC1201_REG_H
