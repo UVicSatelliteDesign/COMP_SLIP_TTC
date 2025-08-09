@@ -100,13 +100,8 @@ HAL_StatusTypeDef CC1201_WriteRegisterConfig(const registerSetting_t *settings, 
     HAL_StatusTypeDef status = HAL_OK;
     
     for (uint16_t i = 0; i < num_settings; i++) {
-        if (settings[i].addr > 0xFF) {
-            // Extended register (requires burst access)
-            // For now, skip extended registers in this simple implementation
-            continue;
-        }
-        
-        status = CC1201_WriteRegister((uint8_t)settings[i].addr, settings[i].data);
+        // Handle both standard and extended addresses via common API
+        status = CC1201_WriteRegister(settings[i].addr, settings[i].data);
         if (status != HAL_OK) {
             return status;
         }

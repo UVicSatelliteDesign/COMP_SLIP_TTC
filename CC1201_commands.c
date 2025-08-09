@@ -113,23 +113,31 @@ HAL_StatusTypeDef CC1201_Nop(uint8_t *status_byte)
 HAL_StatusTypeDef CC1201_ReadStatus(uint16_t reg_addr, uint8_t *read_data)
 {
     HAL_StatusTypeDef status;
-    uint8_t tx_buffer[2];
-    uint8_t rx_buffer[2];
+    uint8_t tx_buffer[4];
+    uint8_t rx_buffer[4];
+    uint8_t buffer_size;
 
-    // Set the read bit (MSB) for the register address
-    tx_buffer[0] = reg_addr | CC1201_READ_BIT;
-    tx_buffer[1] = 0x00; // Dummy byte for reading data
+    if (reg_addr > 0xFF) {
+        // Extended register single read: prefix with 0x2F | READ
+        tx_buffer[0] = 0x2F | CC1201_READ_BIT;
+        tx_buffer[1] = (uint8_t)(reg_addr & 0xFF);
+        tx_buffer[2] = 0x00; // dummy
+        buffer_size = 3;
+    } else {
+        // Standard register single read
+        tx_buffer[0] = (uint8_t)reg_addr | CC1201_READ_BIT;
+        tx_buffer[1] = 0x00; // dummy
+        buffer_size = 2;
+    }
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
 
-    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, tx_buffer, rx_buffer, 2, HAL_MAX_DELAY);
+    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, tx_buffer, rx_buffer, buffer_size, HAL_MAX_DELAY);
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
 
-    if (status == HAL_OK) {
-        if (read_data != NULL) {
-            *read_data = rx_buffer[1]; // The actual data is in the second byte received
-        }
+    if (status == HAL_OK && read_data != NULL) {
+        *read_data = (reg_addr > 0xFF) ? rx_buffer[2] : rx_buffer[1];
     }
     return status;
 }
@@ -144,14 +152,25 @@ HAL_StatusTypeDef CC1201_ReadStatus(uint16_t reg_addr, uint8_t *read_data)
 HAL_StatusTypeDef CC1201_WriteRegister(uint16_t reg_addr, uint8_t write_data)
 {
     HAL_StatusTypeDef status;
-    uint8_t tx_buffer[2];
+    uint8_t tx_buffer[4];
+    uint8_t buffer_size;
 
-    tx_buffer[0] = reg_addr; // Register address
-    tx_buffer[1] = write_data; // Data to write
+    if (reg_addr > 0xFF) {
+        // Extended register single write: prefix with 0x2F (write)
+        tx_buffer[0] = 0x2F;
+        tx_buffer[1] = (uint8_t)(reg_addr & 0xFF);
+        tx_buffer[2] = write_data;
+        buffer_size = 3;
+    } else {
+        // Standard register single write
+        tx_buffer[0] = (uint8_t)reg_addr;
+        tx_buffer[1] = write_data;
+        buffer_size = 2;
+    }
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
 
-    status = HAL_SPI_Transmit(&CC1201_SPI_HANDLE, tx_buffer, 2, HAL_MAX_DELAY);
+    status = HAL_SPI_Transmit(&CC1201_SPI_HANDLE, tx_buffer, buffer_size, HAL_MAX_DELAY);
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
 

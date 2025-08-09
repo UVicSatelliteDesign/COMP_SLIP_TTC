@@ -1,3 +1,7 @@
+#include "main.h"
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_gpio.h"
+#include "stm32h7xx_hal_spi.h"
 #include "CC1201_commands.h"
 #include "CC1201_simple_link_reg_config.h"
 #include "CC1201_reg.h" // Assuming CC1201_SendStrobe is defined here
@@ -118,8 +122,8 @@ HAL_StatusTypeDef CC1201_ReadStatus(uint16_t reg_addr, uint8_t *read_data)
     uint8_t buffer_size;
 
     if (reg_addr > 0xFF) {
-        // Extended register (burst access)
-        tx_buffer[0] = 0x2F; // Extended register access command
+        // Extended register single read: first byte is 0x2F with R/W bit set
+        tx_buffer[0] = 0x2F | CC1201_READ_BIT; // Extended register READ command
         tx_buffer[1] = (uint8_t)(reg_addr & 0xFF); // Low byte of address
         tx_buffer[2] = 0x00; // Dummy byte for reading
         buffer_size = 3;
@@ -162,8 +166,8 @@ HAL_StatusTypeDef CC1201_WriteRegister(uint16_t reg_addr, uint8_t write_data)
     uint8_t buffer_size;
 
     if (reg_addr > 0xFF) {
-        // Extended register (burst access)
-        tx_buffer[0] = 0x2F; // Extended register access command  
+        // Extended register single write: first byte is 0x2F with WRITE (no read bit)
+        tx_buffer[0] = 0x2F; // Extended register WRITE command
         tx_buffer[1] = (uint8_t)(reg_addr & 0xFF); // Low byte of address
         tx_buffer[2] = write_data; // Data to write
         buffer_size = 3;

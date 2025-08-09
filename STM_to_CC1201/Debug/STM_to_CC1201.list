@@ -31,17 +31,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  13 .debug_rnglists 00000b7e  00000000  00000000  000256c8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_macro  000384f1  00000000  00000000  00026246  2**0
+ 14 .debug_macro  000384f5  00000000  00000000  00026246  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_line   000162d1  00000000  00000000  0005e737  2**0
+ 15 .debug_line   000162c0  00000000  00000000  0005e73b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_str    0015ef4a  00000000  00000000  00074a08  2**0
+ 16 .debug_str    0015ef63  00000000  00000000  000749fb  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .comment      00000043  00000000  00000000  001d3952  2**0
+ 17 .comment      00000043  00000000  00000000  001d395e  2**0
                   CONTENTS, READONLY
- 18 .debug_frame  0000455c  00000000  00000000  001d3998  2**2
+ 18 .debug_frame  0000455c  00000000  00000000  001d39a4  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_line_str 00000051  00000000  00000000  001d7ef4  2**0
+ 19 .debug_line_str 0000006a  00000000  00000000  001d7f00  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -639,9 +639,9 @@ HAL_StatusTypeDef CC1201_ReadStatus(uint16_t reg_addr, uint8_t *read_data)
  80007c4:	88fb      	ldrh	r3, [r7, #6]
  80007c6:	2bff      	cmp	r3, #255	@ 0xff
  80007c8:	d909      	bls.n	80007de <CC1201_ReadStatus+0x26>
-        // Extended register (burst access)
-        tx_buffer[0] = 0x2F; // Extended register access command
- 80007ca:	232f      	movs	r3, #47	@ 0x2f
+        // Extended register single read: first byte is 0x2F with R/W bit set
+        tx_buffer[0] = 0x2F | CC1201_READ_BIT; // Extended register READ command
+ 80007ca:	23af      	movs	r3, #175	@ 0xaf
  80007cc:	743b      	strb	r3, [r7, #16]
         tx_buffer[1] = (uint8_t)(reg_addr & 0xFF); // Low byte of address
  80007ce:	88fb      	ldrh	r3, [r7, #6]
@@ -752,8 +752,8 @@ HAL_StatusTypeDef CC1201_WriteRegister(uint16_t reg_addr, uint8_t write_data)
  8000868:	88fb      	ldrh	r3, [r7, #6]
  800086a:	2bff      	cmp	r3, #255	@ 0xff
  800086c:	d909      	bls.n	8000882 <CC1201_WriteRegister+0x2a>
-        // Extended register (burst access)
-        tx_buffer[0] = 0x2F; // Extended register access command  
+        // Extended register single write: first byte is 0x2F with WRITE (no read bit)
+        tx_buffer[0] = 0x2F; // Extended register WRITE command
  800086e:	232f      	movs	r3, #47	@ 0x2f
  8000870:	723b      	strb	r3, [r7, #8]
         tx_buffer[1] = (uint8_t)(reg_addr & 0xFF); // Low byte of address
