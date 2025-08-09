@@ -361,16 +361,11 @@ void test_state_changes(void) {
     uint8_t status_byte = 0;
     uint8_t marc_state = 0;
     
-    // Apply preferred radio configuration and calibrate PLL before state changes
-    printf("Applying radio configuration...\n\r");
-    const registerSetting_t* settings = CC1201_GetPreferredSettings();
-    uint16_t num = CC1201_GetNumPreferredSettings();
-    status = CC1201_WriteRegisterConfig(settings, num);
-    printf("  Config write: HAL=%d\n\r", status);
-    
-    printf("Calibrating frequency synthesizer (SCAL)...\n\r");
+    // Temporarily skip full configuration to verify state transitions first
+    printf("Skipping full configuration for quick state test...\n\r");
+    // Optionally perform a single SCAL only
     status = CC1201_CalFreqSynth(&status_byte);
-    printf("  SCAL strobe: HAL=%d ", status);
+    printf("  SCAL only: HAL=%d ", status);
     if (status == HAL_OK) { print_cc1201_status(status_byte, "SCAL"); }
     HAL_Delay(10);
     

@@ -118,13 +118,14 @@ HAL_StatusTypeDef CC1201_WriteRegisterConfig(const registerSetting_t *settings, 
     HAL_StatusTypeDef status = HAL_OK;
     
     for (uint16_t i = 0; i < num_settings; i++) {
-        // Handle both standard and extended addresses via common API
+        printf("[DEBUG] CFG[%u]: addr=0x%04X data=0x%02X\n\r", i, settings[i].addr, settings[i].data);
         status = CC1201_WriteRegister(settings[i].addr, settings[i].data);
         if (status != HAL_OK) {
+            printf("[DEBUG] CFG write failed at idx=%u HAL=%d\n\r", i, status);
             return status;
         }
-        
-        HAL_Delay(1); // Small delay between register writes
+        // brief inter-write delay
+        for (volatile uint32_t d = 0; d < 500; ++d) { __NOP(); }
     }
     
     return status;

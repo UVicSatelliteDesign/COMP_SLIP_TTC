@@ -1,5 +1,6 @@
 #include "main.h"
 #include "stm32h7xx_hal.h"
+#include <stdint.h>
 #include "stm32h7xx_hal_gpio.h"
 #include "stm32h7xx_hal_spi.h"
 #include "CC1201_commands.h"
@@ -135,8 +136,9 @@ HAL_StatusTypeDef CC1201_ReadStatus(uint16_t reg_addr, uint8_t *read_data)
     }
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
+    for (volatile uint32_t i = 0; i < 200; ++i) { __NOP(); }
 
-    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, tx_buffer, rx_buffer, buffer_size, HAL_MAX_DELAY);
+    status = HAL_SPI_TransmitReceive(&CC1201_SPI_HANDLE, tx_buffer, rx_buffer, buffer_size, 1000);
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
 
@@ -179,11 +181,13 @@ HAL_StatusTypeDef CC1201_WriteRegister(uint16_t reg_addr, uint8_t write_data)
     }
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_RESET); // Pull CS low
+    for (volatile uint32_t i = 0; i < 200; ++i) { __NOP(); }
 
-    status = HAL_SPI_Transmit(&CC1201_SPI_HANDLE, tx_buffer, buffer_size, HAL_MAX_DELAY);
+    status = HAL_SPI_Transmit(&CC1201_SPI_HANDLE, tx_buffer, buffer_size, 250);
 
     HAL_GPIO_WritePin(CC1201_CS_PORT, CC1201_CS_PIN, GPIO_PIN_SET); // Pull CS high
 
+    printf("[DEBUG] WriteReg 0x%04X <= 0x%02X -> HAL=%d\n\r", reg_addr, write_data, status);
     return status;
 }
 
